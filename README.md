@@ -6,7 +6,7 @@ Origin python library can be found here
 [nvidia-ml-py](https://pypi.python.org/pypi/nvidia-ml-py/7.352.0). I have
 forked from version 7.352.0. 
 
-This is an NVIDIA sponsored library, but it only works for python <= 2.5. This
+This is from an NVIDIA sponsored library, but that only works for python <= 2.5. This
 package was created from the NVIDIA library by running **2to3** on it, and
 making it pip importable. (Also changed the README from a .txt to a .md).
 
@@ -24,13 +24,28 @@ http://developer.nvidia.com/nvidia-management-library-nvml
 --------
 Python 3.5 or earlier
 
-## Installation
-Download and pip install from Git:
+## Installation 
+Direct install from github (useful if you use pip freeze)
     
-    $ git clone git@github.com:fbcotter/nvml.git
+    $ pip install -e git+https://github.com/fbcotter/py3nvml#egg=py3nvml
+
+Download and pip install from Git:
+    $ git clone https://github.com/fbcotter/py3nvml
     $ cd py3nvml
     $ pip install .
     
+## Special TF Utils usage
+If you are using Tensorflow, I have included a helper function to query the
+gpus and create a session. As py3nvml should work without tensorflow, you have
+to import this module separately. I.e.,
+
+    >>> import py3nvml # optional
+    >>> from py3nvml.tf_utils import create_session
+    >>> sess = create_session(num_gpus=3,gpu_select=range(6),graph=mygraph)
+
+Have a closer look at the docstring for create_session, but the above example
+attempst to create a session using 3 gpus, by searching the first 6 gpus for
+available memory. 
 
 ## Usage
 
