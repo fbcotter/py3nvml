@@ -10,7 +10,15 @@ def create_session(num_gpus=1,gpu_select=None, gpu_fraction=1.0,
     """
     Creates a tensorflow session and returns it to the caller.
     Will first search for a GPU that is available and will set the correct
-    environment variables so we don't try to use it.
+    environment variables so we don't try to use it. Calling this function will
+    set the environment variable CUDA_VISIBLE_DEVICES, regardless of whether it
+    succeeds or not. 
+    
+    This will be useful if it fails to find any free GPUs and
+    raises an exception, the caller could then try themselves anyway and
+    tensorflow will grab whatever it pleases, and potentially disrupt the other
+    jobs. Now, if create_session fails, it will still have set the
+    CUDA_VISIBLE_DEVICES env to be "".
     
     :param num_gpus (optional) how many gpus your job needs
     :param gpu_select (optional) a single int or an iterable of ints gpus to 
@@ -25,11 +33,16 @@ def create_session(num_gpus=1,gpu_select=None, gpu_fraction=1.0,
     :raises ValueError: If there is no GPU
     :raises ValueError: If the gpu_select option was not understood (leave
         blank, provide an int or an iterable of ints)
+    :raises NVMLError: If couldn't find any GPUs
     """ 
 
+    # Try connect with NVIDIA drivers. This will
     nvmlInit()
     numDevices = nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
+
+    # Set the visible devices to blank. 
+    os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
     # Flag which gpus we can check
     if gpu_select is None:
@@ -103,5 +116,6 @@ def create_session(num_gpus=1,gpu_select=None, gpu_fraction=1.0,
         sess=tf.Session(graph=graph,config=config)
         return sess
 
+    
     raise ValueError("Could not find a GPU")
 
