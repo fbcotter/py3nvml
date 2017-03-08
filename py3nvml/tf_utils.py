@@ -33,11 +33,16 @@ def create_session(num_gpus=1,gpu_select=None, gpu_fraction=1.0,
     :raises ValueError: If there is no GPU
     :raises ValueError: If the gpu_select option was not understood (leave
         blank, provide an int or an iterable of ints)
-    :raises NVMLError: If couldn't find any GPUs
+    :raises ValueError: If couldn't find any GPUs
     """ 
 
     # Try connect with NVIDIA drivers. This will
-    nvmlInit()
+    try:
+        nvmlInit()
+    except:
+        raise ValueError("""Couldn't connect to nvml drivers. Check they are
+            instlaled correctly.""")
+
     numDevices = nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
 
