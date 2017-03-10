@@ -42,6 +42,7 @@ This is useful if you have a shared resource, and are using a library like
 tensorflow where calls to tf.Session() grabs all available gpus.
 
 E.g.
+
     >>> import py3nvml
     >>> py3nvml.grab_gpus(3, range(2,6))
     >>> sess = tf.Session() # now we only grab 3 gpus!
