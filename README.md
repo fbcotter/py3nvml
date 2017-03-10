@@ -34,7 +34,23 @@ Download and pip install from Git:
     $ cd py3nvml
     $ pip install .
     
-## Special TF Utils usage
+## Utils
+You can call the grab_gpus(num_gpus, gpu_select) function to check the
+available gpus and set the CUDA_VISIBLE_DEVICES environment variable as need
+be.
+This is useful if you have a shared resource, and are using a library like
+tensorflow where calls to tf.Session() grabs all available gpus.
+
+E.g.
+    >>> import py3nvml
+    >>> py3nvml.grab_gpus(3, range(2,6))
+    >>> sess = tf.Session() # now we only grab 3 gpus!
+
+This will look for 3 available gpus in the range of gpus from 2 to 6. The range
+option is not necessary, and it only serves to restrict the search space for
+the grab_gpus.
+
+### Special TF Utils usage
 If you are using Tensorflow, I have included a helper function to query the
 gpus and create a session. As py3nvml should work without tensorflow, you have
 to import this module separately. I.e.,
