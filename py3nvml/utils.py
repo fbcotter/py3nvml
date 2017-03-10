@@ -27,10 +27,11 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         someone has grabbed a tiny amount of memory on a gpu but isn't using
         it.
 
+    :returns 0 if successful, -1 if not.
+
     :raises ValueError: If couldn't connect with NVIDIA drivers
     :raises ValueError: If the gpu_select option was not understood (leave
         blank, provide an int or an iterable of ints)
-    :raises ValueError: If couldn't find any GPUs
     """ 
 
     # Try connect with NVIDIA drivers. This will
@@ -105,6 +106,7 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         logging.info('{} Gpus found free'.format(sum(gpu_free)))
         logging.info('Using {}'.format(use_gpus))
         os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
+        return 0
     else:
-        raise ValueError("Could not find a GPU")
+        return -1
 
