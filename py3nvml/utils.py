@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
+import warning
 from py3nvml.py3nvml import *
 
 def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
@@ -29,23 +30,24 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
 
     :returns 0 if successful, -1 if not.
 
-    :raises ValueError: If couldn't connect with NVIDIA drivers
+    :raises RuntimeWarning: If couldn't connect with NVIDIA drivers
     :raises ValueError: If the gpu_select option was not understood (leave
         blank, provide an int or an iterable of ints)
     """ 
+
+    # Set the visible devices to blank. 
+    os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
     # Try connect with NVIDIA drivers. This will
     try:
         nvmlInit()
     except:
-        raise ValueError("""Couldn't connect to nvml drivers. Check they are
-            instlaled correctly.""")
+        warning.warn("""Couldn't connect to nvml drivers. Check they are
+            instlaled correctly. Proceeding on cpu only...""", RuntimeWarning)
 
     numDevices = nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
 
-    # Set the visible devices to blank. 
-    os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
     # Flag which gpus we can check
     if gpu_select is None:
@@ -106,7 +108,6 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         logging.info('{} Gpus found free'.format(sum(gpu_free)))
         logging.info('Using {}'.format(use_gpus))
         os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-        return 0
-    else:
+        return 0 else:
         return -1
 
