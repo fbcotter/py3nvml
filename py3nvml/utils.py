@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
+import os
 import warnings
 from py3nvml.py3nvml import *
 
@@ -42,8 +43,10 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     try:
         nvmlInit()
     except:
-        warnings.warn("""Couldn't connect to nvml drivers. Check they are
-            instlaled correctly. Proceeding on cpu only...""", RuntimeWarning)
+        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly. 
+                  Proceeding on cpu only..."""
+        warnings.warn(str_, RuntimeWarning)
+        return
 
     numDevices = nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
