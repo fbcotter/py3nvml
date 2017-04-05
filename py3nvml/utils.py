@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
-import warning
+import warnings
 from py3nvml.py3nvml import *
 
 def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
@@ -108,6 +108,7 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         logging.info('{} Gpus found free'.format(sum(gpu_free)))
         logging.info('Using {}'.format(use_gpus))
         os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-        return 0 else:
+        return 0 
+    else:
         return -1
 
