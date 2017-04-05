@@ -42,7 +42,7 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     try:
         nvmlInit()
     except:
-        warning.warn("""Couldn't connect to nvml drivers. Check they are
+        warnings.warn("""Couldn't connect to nvml drivers. Check they are
             instlaled correctly. Proceeding on cpu only...""", RuntimeWarning)
 
     numDevices = nvmlDeviceGetCount()
