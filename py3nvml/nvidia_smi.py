@@ -225,7 +225,7 @@ def XmlDeviceQuery():
             
             strResult += '  <gpu id="%s">\n' % pciInfo.busId
             
-            strResult += '    <product_name>' + nvmlDeviceGetName(handle) + '</product_name>\n'
+            strResult += '    <product_name>' + str(nvmlDeviceGetName(handle)) + '</product_name>\n'
             
             brandNames = {NVML_BRAND_UNKNOWN :  "Unknown",
                           NVML_BRAND_QUADRO  :  "Quadro",
@@ -297,35 +297,35 @@ def XmlDeviceQuery():
             strResult += '    </driver_model>\n'
 
             try:
-                serial = nvmlDeviceGetSerial(handle)
+                serial = str(nvmlDeviceGetSerial(handle))
             except NVMLError as err:
                 serial = handleError(err)
 
             strResult += '    <serial>' + serial + '</serial>\n'
 
             try:
-                uuid = nvmlDeviceGetUUID(handle)
+                uuid = str(nvmlDeviceGetUUID(handle))
             except NVMLError as err:
                 uuid = handleError(err)
 
             strResult += '    <uuid>' + uuid + '</uuid>\n'
             
             try:
-                minor_number = nvmlDeviceGetMinorNumber(handle)
+                minor_number = str(nvmlDeviceGetMinorNumber(handle))
             except NVMLError as err:
                 minor_number = handleError(err)
 
             strResult += '    <minor_number>' + str(minor_number) + '</minor_number>\n'
             
             try:
-                vbios = nvmlDeviceGetVbiosVersion(handle)
+                vbios = str(nvmlDeviceGetVbiosVersion(handle))
             except NVMLError as err:
                 vbios = handleError(err)
 
             strResult += '    <vbios_version>' + vbios + '</vbios_version>\n'
 
             try:
-                multiGpuBool = nvmlDeviceGetMultiGpuBoard(handle)
+                multiGpuBool = str(nvmlDeviceGetMultiGpuBoard(handle))
             except NVMLError as err:
                 multiGpuBool = handleError(err);
 
@@ -337,7 +337,7 @@ def XmlDeviceQuery():
                 strResult += '    <multigpu_board>' + 'No' + '</multigpu_board>\n'
 
             try:
-                boardId = nvmlDeviceGetBoardId(handle)
+                boardId = str(nvmlDeviceGetBoardId(handle))
             except NVMLError as err:
                 boardId = handleError(err)
 
@@ -351,28 +351,28 @@ def XmlDeviceQuery():
             strResult += '    <inforom_version>\n'
             
             try:
-                img = nvmlDeviceGetInforomImageVersion(handle)
+                img = str(nvmlDeviceGetInforomImageVersion(handle))
             except NVMLError as err:
                 img = handleError(err)
                 
             strResult += '      <img_version>' + img + '</img_version>\n'
 
             try:
-                oem = nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_OEM)
+                oem = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_OEM))
             except NVMLError as err:
                 oem = handleError(err)
                 
             strResult += '      <oem_object>' + oem + '</oem_object>\n'
             
             try:
-                ecc = nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_ECC)
+                ecc = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_ECC))
             except NVMLError as err:
                 ecc = handleError(err)
             
             strResult += '      <ecc_object>' + ecc + '</ecc_object>\n'
 
             try:
-                pwr = nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_POWER)
+                pwr = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_POWER))
             except NVMLError as err:
                 pwr = handleError(err)
             
@@ -494,7 +494,7 @@ def XmlDeviceQuery():
             strResult += '    <fan_speed>' + fan + '</fan_speed>\n'
 
             try:
-                perfState = nvmlDeviceGetPowerState(handle)
+                perfState = str(nvmlDeviceGetPowerState(handle))
                 perfStateStr = 'P%s' % perfState
             except NVMLError as err:
                 perfStateStr = handleError(err)
