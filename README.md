@@ -6,8 +6,10 @@ Origin python library can be found here
 [nvidia-ml-py](https://pypi.python.org/pypi/nvidia-ml-py/7.352.0). I have
 forked from version 7.352.0. 
 
-This is from an NVIDIA sponsored library, but that only works for python <= 2.5. This
-package was created from the NVIDIA library by running **2to3** on it, and
+This is from an NVIDIA sponsored library, but that only works for python
+versions before 2.5. 
+
+This package was created from the NVIDIA library by running **2to3** on it, and
 making it pip importable. (Also changed the README from a .txt to a .md).
 
 ## Info on NVIDIA Management Library
@@ -21,8 +23,7 @@ http://developer.nvidia.com/nvidia-management-library-nvml
 
 
 ## Requires
---------
-Python 3.5 or earlier
+Python 3.5. Haven't tested on python3.6 but may well work.
 
 ## Installation 
 Direct install from github (useful if you use pip freeze)
@@ -30,28 +31,36 @@ Direct install from github (useful if you use pip freeze)
     $ pip install -e git+https://github.com/fbcotter/py3nvml#egg=py3nvml
 
 Download and pip install from Git:
+
     $ git clone https://github.com/fbcotter/py3nvml
     $ cd py3nvml
     $ pip install .
-    
-## Utils
+
+## Utils (added by me - not ported from NVIDIA library)
+
 You can call the grab_gpus(num_gpus, gpu_select) function to check the
 available gpus and set the CUDA_VISIBLE_DEVICES environment variable as need
-be.
-This is useful if you have a shared resource, and are using a library like
+be. This is useful if you have a shared resource, and are using a library like
 tensorflow where calls to tf.Session() grabs all available gpus.
 
 E.g.
 
     >>> import py3nvml
-    >>> py3nvml.grab_gpus(3, range(2,6))
+    >>> py3nvml.grab_gpus(3))
     >>> sess = tf.Session() # now we only grab 3 gpus!
+
+Or the following will grab 2 gpus from the first 4 (and leave any higher gpus untouched)
+    
+    >>> import py3nvml
+    >>> py3nvml.grab_gpus(2, range(4))
+    >>> sess = tf.Session() 
 
 This will look for 3 available gpus in the range of gpus from 2 to 6. The range
 option is not necessary, and it only serves to restrict the search space for
 the grab_gpus.
 
-### Special TF Utils usage
+### Special TF Utils usage (deprecated and will be removed in future)
+
 If you are using Tensorflow, I have included a helper function to query the
 gpus and create a session. As py3nvml should work without tensorflow, you have
 to import this module separately. I.e.,
@@ -64,16 +73,16 @@ Have a closer look at the docstring for create_session, but the above example
 attempst to create a session using 3 gpus, by searching the first 6 gpus for
 available memory. 
 
-## Usage
+## Usage (below here is ported from the standard NVIDIA library)
 
-    >>> from py3nvml.pynvml import *
+    >>> from py3nvml.py3nvml import *
     >>> nvmlInit()
-    >>> print "Driver Version:", nvmlSystemGetDriverVersion()
+    >>> print("Driver Version: {}".format(str(nvmlSystemGetDriverVersion())))
     Driver Version: 352.00
     >>> deviceCount = nvmlDeviceGetCount()
     >>> for i in range(deviceCount):
     ...     handle = nvmlDeviceGetHandleByIndex(i)
-    ...     print("Device {}: {}".format(i, nvmlDeviceGetName(handle)))
+    ...     print("Device {}: {}".format(i, str(nvmlDeviceGetName(handle))))
     ... 
     Device 0 : Tesla K40c
     
@@ -83,6 +92,14 @@ Additionally, see py3nvml.nvidia_smi.py.  A sample application that prints out
 the same as the command line:
 
     nvidia-smi -q -x
+
+Can be done with:
+
+    >>> import py3nvml.nvidia_smi as smi
+    >>> print(smi.XmlDeviceQuery())
+
+You will notice that a lot of the calls are wrapped with str() functions, as
+the underlying NVIDIA library returns bytes objects most of the time. 
 
 ## Functions
 Python methods wrap NVML functions, implemented in a C shared library.
@@ -155,13 +172,11 @@ Each function's use is the same with the following exceptions:
 For usage information see the NVML documentation.
 
 ## Variables
----------
 All meaningful NVML constants and enums are exposed in Python.
 
 The NVML_VALUE_NOT_AVAILABLE constant is not used.  Instead None is mapped to the field.
 
 ## Release Notes
--------------
 Version 2.285.0
 - Added new functions for NVML 2.285.  See NVML documentation for more information.
 - Ported to support Python 3.0 and Python 2.0 syntax.
@@ -184,12 +199,10 @@ Version 7.346.0
 Version 7.352.0
 - Added new functions for NVML 7.352.  See NVML documentation for more information.
 
-COPYRIGHT
----------
+## COPYRIGHT
 Copyright (c) 2011-2015, NVIDIA Corporation.  All rights reserved.
 
-LICENSE
--------
+## LICENSE
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
