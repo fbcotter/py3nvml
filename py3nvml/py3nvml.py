@@ -365,6 +365,13 @@ class struct_c_nvmlUnit_t(Structure):
     pass # opaque handle
 c_nvmlUnit_t = POINTER(struct_c_nvmlUnit_t)
     
+# Convert bytes objects to strings or leave untouched
+def bytes_to_str(s):
+    if type(s) is bytes:
+        return str(s, 'utf-8')
+    else:
+        return s
+
 class _PrintableStructure(Structure):
     """
     Abstract class that produces nicer __str__ output than ctypes.Structure.
@@ -396,7 +403,7 @@ class _PrintableStructure(Structure):
             elif "<default>" in self._fmt_:
                 fmt = self._fmt_["<default>"]
             result.append(("%s: " + fmt) % (key, value))
-        return self.__class__.__name__ + "(" + string.join(result, ", ") + ")"
+        return self.__class__.__name__ + "(" + ", ".join(result)  + ")"
     
 class c_nvmlUnitInfo_t(_PrintableStructure):
     _fields_ = [
@@ -671,7 +678,7 @@ def nvmlErrorString(result):
     fn = _nvmlGetFunctionPointer("nvmlErrorString")
     fn.restype = c_char_p # otherwise return is an int
     ret = fn(result)
-    return ret
+    return bytes_to_str(ret)
 
 # Added in 2.285
 def nvmlSystemGetNVMLVersion():
@@ -679,7 +686,7 @@ def nvmlSystemGetNVMLVersion():
     fn = _nvmlGetFunctionPointer("nvmlSystemGetNVMLVersion")
     ret = fn(c_version, c_uint(NVML_SYSTEM_NVML_VERSION_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_version.value
+    return bytes_to_str(c_version.value)
 
 # Added in 2.285
 def nvmlSystemGetProcessName(pid):
@@ -687,14 +694,14 @@ def nvmlSystemGetProcessName(pid):
     fn = _nvmlGetFunctionPointer("nvmlSystemGetProcessName")
     ret = fn(c_uint(pid), c_name, c_uint(1024))
     _nvmlCheckReturn(ret)
-    return c_name.value
+    return bytes_to_str(c_name.value)
 
 def nvmlSystemGetDriverVersion():
     c_version = create_string_buffer(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE)
     fn = _nvmlGetFunctionPointer("nvmlSystemGetDriverVersion")
     ret = fn(c_version, c_uint(NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_version.value
+    return bytes_to_str(c_version.value)
 
 # Added in 2.285
 def nvmlSystemGetHicVersion():
@@ -718,7 +725,8 @@ def nvmlSystemGetHicVersion():
     hics = hic_array()
     ret = fn(byref(c_count), hics)
     _nvmlCheckReturn(ret)
-    return hics
+    return bytes_to_str(hics)
+
 
 ## Unit get functions
 def nvmlUnitGetCount():
@@ -726,7 +734,7 @@ def nvmlUnitGetCount():
     fn = _nvmlGetFunctionPointer("nvmlUnitGetCount")
     ret = fn(byref(c_count))
     _nvmlCheckReturn(ret)
-    return c_count.value
+    return bytes_to_str(c_count.value)
 
 def nvmlUnitGetHandleByIndex(index):
     c_index = c_uint(index)
@@ -734,42 +742,42 @@ def nvmlUnitGetHandleByIndex(index):
     fn = _nvmlGetFunctionPointer("nvmlUnitGetHandleByIndex")
     ret = fn(c_index, byref(unit))
     _nvmlCheckReturn(ret)
-    return unit
+    return bytes_to_str(unit)
 
 def nvmlUnitGetUnitInfo(unit):
     c_info = c_nvmlUnitInfo_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetUnitInfo")
     ret = fn(unit, byref(c_info))
     _nvmlCheckReturn(ret)
-    return c_info
+    return bytes_to_str(c_info)
 
 def nvmlUnitGetLedState(unit):
     c_state =  c_nvmlLedState_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetLedState")
     ret = fn(unit, byref(c_state))
     _nvmlCheckReturn(ret)
-    return c_state
+    return bytes_to_str(c_state)
 
 def nvmlUnitGetPsuInfo(unit):
     c_info = c_nvmlPSUInfo_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetPsuInfo")
     ret = fn(unit, byref(c_info))
     _nvmlCheckReturn(ret)
-    return c_info
+    return bytes_to_str(c_info)
 
 def nvmlUnitGetTemperature(unit, type):
     c_temp = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetTemperature")
     ret = fn(unit, c_uint(type), byref(c_temp))
     _nvmlCheckReturn(ret)
-    return c_temp.value
+    return bytes_to_str(c_temp.value)
 
 def nvmlUnitGetFanSpeedInfo(unit):
     c_speeds = c_nvmlUnitFanSpeeds_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetFanSpeedInfo")
     ret = fn(unit, byref(c_speeds))
     _nvmlCheckReturn(ret)
-    return c_speeds
+    return bytes_to_str(c_speeds)
     
 # added to API
 def nvmlUnitGetDeviceCount(unit):
@@ -780,7 +788,7 @@ def nvmlUnitGetDeviceCount(unit):
     if (ret == NVML_ERROR_INSUFFICIENT_SIZE):
         ret = NVML_SUCCESS
     _nvmlCheckReturn(ret)
-    return c_count.value
+    return bytes_to_str(c_count.value)
 
 def nvmlUnitGetDevices(unit):
     c_count = c_uint(nvmlUnitGetDeviceCount(unit))
@@ -789,7 +797,7 @@ def nvmlUnitGetDevices(unit):
     fn = _nvmlGetFunctionPointer("nvmlUnitGetDevices")
     ret = fn(unit, byref(c_count), c_devices)
     _nvmlCheckReturn(ret)
-    return c_devices
+    return bytes_to_str(c_devices)
 
 ## Device get functions
 def nvmlDeviceGetCount():
@@ -797,7 +805,7 @@ def nvmlDeviceGetCount():
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetCount_v2")
     ret = fn(byref(c_count))
     _nvmlCheckReturn(ret)
-    return c_count.value
+    return bytes_to_str(c_count.value)
 
 def nvmlDeviceGetHandleByIndex(index):
     c_index = c_uint(index)
@@ -805,7 +813,7 @@ def nvmlDeviceGetHandleByIndex(index):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByIndex_v2")
     ret = fn(c_index, byref(device))
     _nvmlCheckReturn(ret)
-    return device
+    return bytes_to_str(device)
 
 def nvmlDeviceGetHandleBySerial(serial):
     c_serial = c_char_p(serial)
@@ -813,7 +821,7 @@ def nvmlDeviceGetHandleBySerial(serial):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleBySerial")
     ret = fn(c_serial, byref(device))
     _nvmlCheckReturn(ret)
-    return device
+    return bytes_to_str(device)
 
 def nvmlDeviceGetHandleByUUID(uuid):
     c_uuid = c_char_p(uuid)
@@ -821,7 +829,7 @@ def nvmlDeviceGetHandleByUUID(uuid):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByUUID")
     ret = fn(c_uuid, byref(device))
     _nvmlCheckReturn(ret)
-    return device
+    return bytes_to_str(device)
     
 def nvmlDeviceGetHandleByPciBusId(pciBusId):
     c_busId = c_char_p(pciBusId)
@@ -829,42 +837,42 @@ def nvmlDeviceGetHandleByPciBusId(pciBusId):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByPciBusId_v2")
     ret = fn(c_busId, byref(device))
     _nvmlCheckReturn(ret)
-    return device
+    return bytes_to_str(device)
 
 def nvmlDeviceGetName(handle):
     c_name = create_string_buffer(NVML_DEVICE_NAME_BUFFER_SIZE)
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetName")
     ret = fn(handle, c_name, c_uint(NVML_DEVICE_NAME_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_name.value
+    return bytes_to_str(c_name.value)
 
 def nvmlDeviceGetBoardId(handle):
     c_id = c_uint();
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetBoardId")
     ret = fn(handle, byref(c_id))
     _nvmlCheckReturn(ret)
-    return c_id.value
+    return bytes_to_str(c_id.value)
 
 def nvmlDeviceGetMultiGpuBoard(handle):
     c_multiGpu = c_uint();
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetMultiGpuBoard")
     ret = fn(handle, byref(c_multiGpu))
     _nvmlCheckReturn(ret)
-    return c_multiGpu.value
+    return bytes_to_str(c_multiGpu.value)
 
 def nvmlDeviceGetBrand(handle):
     c_type = _nvmlBrandType_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetBrand")
     ret = fn(handle, byref(c_type))
     _nvmlCheckReturn(ret)
-    return c_type.value
+    return bytes_to_str(c_type.value)
     
 def nvmlDeviceGetSerial(handle):
     c_serial = create_string_buffer(NVML_DEVICE_SERIAL_BUFFER_SIZE)
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetSerial")
     ret = fn(handle, c_serial, c_uint(NVML_DEVICE_SERIAL_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_serial.value
+    return bytes_to_str(c_serial.value)
 
 def nvmlDeviceGetCpuAffinity(handle, cpuSetSize):
     affinity_array = c_ulonglong * cpuSetSize
@@ -872,7 +880,7 @@ def nvmlDeviceGetCpuAffinity(handle, cpuSetSize):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetCpuAffinity")
     ret = fn(handle, cpuSetSize, byref(c_affinity))
     _nvmlCheckReturn(ret)
-    return c_affinity
+    return bytes_to_str(c_affinity)
 
 def nvmlDeviceSetCpuAffinity(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceSetCpuAffinity")
@@ -891,14 +899,14 @@ def nvmlDeviceGetMinorNumber(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetMinorNumber")
     ret = fn(handle, byref(c_minor_number))
     _nvmlCheckReturn(ret)
-    return c_minor_number.value
+    return bytes_to_str(c_minor_number.value)
     
 def nvmlDeviceGetUUID(handle):
     c_uuid = create_string_buffer(NVML_DEVICE_UUID_BUFFER_SIZE)
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetUUID")
     ret = fn(handle, c_uuid, c_uint(NVML_DEVICE_UUID_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_uuid.value
+    return bytes_to_str(c_uuid.value)
     
 def nvmlDeviceGetInforomVersion(handle, infoRomObject):
     c_version = create_string_buffer(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE)
@@ -906,7 +914,7 @@ def nvmlDeviceGetInforomVersion(handle, infoRomObject):
     ret = fn(handle, _nvmlInforomObject_t(infoRomObject),
 	         c_version, c_uint(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_version.value
+    return bytes_to_str(c_version.value)
 
 # Added in 4.304
 def nvmlDeviceGetInforomImageVersion(handle):
@@ -914,7 +922,7 @@ def nvmlDeviceGetInforomImageVersion(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetInforomImageVersion")
     ret = fn(handle, c_version, c_uint(NVML_DEVICE_INFOROM_VERSION_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_version.value
+    return bytes_to_str(c_version.value)
 
 # Added in 4.304
 def nvmlDeviceGetInforomConfigurationChecksum(handle):
@@ -922,7 +930,7 @@ def nvmlDeviceGetInforomConfigurationChecksum(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetInforomConfigurationChecksum")
     ret = fn(handle, byref(c_checksum))
     _nvmlCheckReturn(ret)
-    return c_checksum.value
+    return bytes_to_str(c_checksum.value)
 
 # Added in 4.304
 def nvmlDeviceValidateInforom(handle):
@@ -936,14 +944,14 @@ def nvmlDeviceGetDisplayMode(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetDisplayMode")
     ret = fn(handle, byref(c_mode))
     _nvmlCheckReturn(ret)
-    return c_mode.value
+    return bytes_to_str(c_mode.value)
     
 def nvmlDeviceGetDisplayActive(handle):
     c_mode = _nvmlEnableState_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetDisplayActive")
     ret = fn(handle, byref(c_mode))
     _nvmlCheckReturn(ret)
-    return c_mode.value
+    return bytes_to_str(c_mode.value)
     
     
 def nvmlDeviceGetPersistenceMode(handle):
@@ -951,21 +959,21 @@ def nvmlDeviceGetPersistenceMode(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPersistenceMode")
     ret = fn(handle, byref(c_state))
     _nvmlCheckReturn(ret)
-    return c_state.value
+    return bytes_to_str(c_state.value)
     
 def nvmlDeviceGetPciInfo(handle):
     c_info = nvmlPciInfo_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPciInfo_v2")
     ret = fn(handle, byref(c_info))
     _nvmlCheckReturn(ret)
-    return c_info
+    return bytes_to_str(c_info)
     
 def nvmlDeviceGetClockInfo(handle, type):
     c_clock = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetClockInfo")
     ret = fn(handle, _nvmlClockType_t(type), byref(c_clock))
     _nvmlCheckReturn(ret)
-    return c_clock.value
+    return bytes_to_str(c_clock.value)
 
 # Added in 2.285
 def nvmlDeviceGetMaxClockInfo(handle, type):
@@ -973,7 +981,7 @@ def nvmlDeviceGetMaxClockInfo(handle, type):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetMaxClockInfo")
     ret = fn(handle, _nvmlClockType_t(type), byref(c_clock))
     _nvmlCheckReturn(ret)
-    return c_clock.value
+    return bytes_to_str(c_clock.value)
 
 # Added in 4.304
 def nvmlDeviceGetApplicationsClock(handle, type):
@@ -981,7 +989,7 @@ def nvmlDeviceGetApplicationsClock(handle, type):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetApplicationsClock")
     ret = fn(handle, _nvmlClockType_t(type), byref(c_clock))
     _nvmlCheckReturn(ret)
-    return c_clock.value
+    return bytes_to_str(c_clock.value)
 
 # Added in 5.319
 def nvmlDeviceGetDefaultApplicationsClock(handle, type):
@@ -989,7 +997,7 @@ def nvmlDeviceGetDefaultApplicationsClock(handle, type):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetDefaultApplicationsClock")
     ret = fn(handle, _nvmlClockType_t(type), byref(c_clock))
     _nvmlCheckReturn(ret)
-    return c_clock.value
+    return bytes_to_str(c_clock.value)
 
 # Added in 4.304
 def nvmlDeviceGetSupportedMemoryClocks(handle):
@@ -1052,21 +1060,21 @@ def nvmlDeviceGetFanSpeed(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetFanSpeed")
     ret = fn(handle, byref(c_speed))
     _nvmlCheckReturn(ret)
-    return c_speed.value
+    return bytes_to_str(c_speed.value)
     
 def nvmlDeviceGetTemperature(handle, sensor):
     c_temp = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetTemperature")
     ret = fn(handle, _nvmlTemperatureSensors_t(sensor), byref(c_temp))
     _nvmlCheckReturn(ret)
-    return c_temp.value
+    return bytes_to_str(c_temp.value)
 
 def nvmlDeviceGetTemperatureThreshold(handle, threshold):
     c_temp = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetTemperatureThreshold")
     ret = fn(handle, _nvmlTemperatureThresholds_t(threshold), byref(c_temp))
     _nvmlCheckReturn(ret)
-    return c_temp.value
+    return bytes_to_str(c_temp.value)
 
 # DEPRECATED use nvmlDeviceGetPerformanceState
 def nvmlDeviceGetPowerState(handle):
@@ -1074,28 +1082,28 @@ def nvmlDeviceGetPowerState(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPowerState")
     ret = fn(handle, byref(c_pstate))
     _nvmlCheckReturn(ret)
-    return c_pstate.value
+    return bytes_to_str(c_pstate.value)
     
 def nvmlDeviceGetPerformanceState(handle):
     c_pstate = _nvmlPstates_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPerformanceState")
     ret = fn(handle, byref(c_pstate))
     _nvmlCheckReturn(ret)
-    return c_pstate.value
+    return bytes_to_str(c_pstate.value)
 
 def nvmlDeviceGetPowerManagementMode(handle):
     c_pcapMode = _nvmlEnableState_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPowerManagementMode")
     ret = fn(handle, byref(c_pcapMode))
     _nvmlCheckReturn(ret)
-    return c_pcapMode.value
+    return bytes_to_str(c_pcapMode.value)
     
 def nvmlDeviceGetPowerManagementLimit(handle):
     c_limit = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPowerManagementLimit")
     ret = fn(handle, byref(c_limit))
     _nvmlCheckReturn(ret)
-    return c_limit.value
+    return bytes_to_str(c_limit.value)
 
 # Added in 4.304
 def nvmlDeviceGetPowerManagementLimitConstraints(handle):
@@ -1112,7 +1120,7 @@ def nvmlDeviceGetPowerManagementDefaultLimit(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPowerManagementDefaultLimit")
     ret = fn(handle, byref(c_limit))
     _nvmlCheckReturn(ret)
-    return c_limit.value
+    return bytes_to_str(c_limit.value)
     
 
 # Added in 331
@@ -1121,14 +1129,14 @@ def nvmlDeviceGetEnforcedPowerLimit(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetEnforcedPowerLimit")
     ret = fn(handle, byref(c_limit))
     _nvmlCheckReturn(ret)
-    return c_limit.value
+    return bytes_to_str(c_limit.value)
 
 def nvmlDeviceGetPowerUsage(handle):
     c_watts = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPowerUsage")
     ret = fn(handle, byref(c_watts))
     _nvmlCheckReturn(ret)
-    return c_watts.value
+    return bytes_to_str(c_watts.value)
 
 # Added in 4.304
 def nvmlDeviceGetGpuOperationMode(handle):
@@ -1152,21 +1160,21 @@ def nvmlDeviceGetMemoryInfo(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetMemoryInfo")
     ret = fn(handle, byref(c_memory))
     _nvmlCheckReturn(ret)
-    return c_memory
+    return bytes_to_str(c_memory)
 
 def nvmlDeviceGetBAR1MemoryInfo(handle):
     c_bar1_memory = c_nvmlBAR1Memory_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetBAR1MemoryInfo")
     ret = fn(handle, byref(c_bar1_memory))
     _nvmlCheckReturn(ret)
-    return c_bar1_memory
+    return bytes_to_str(c_bar1_memory)
     
 def nvmlDeviceGetComputeMode(handle):
     c_mode = _nvmlComputeMode_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetComputeMode")
     ret = fn(handle, byref(c_mode))
     _nvmlCheckReturn(ret)
-    return c_mode.value
+    return bytes_to_str(c_mode.value)
     
 def nvmlDeviceGetEccMode(handle):
     c_currState = _nvmlEnableState_t()
@@ -1190,7 +1198,7 @@ def nvmlDeviceGetTotalEccErrors(handle, errorType, counterType):
     ret = fn(handle, _nvmlMemoryErrorType_t(errorType),
 	         _nvmlEccCounterType_t(counterType), byref(c_count))
     _nvmlCheckReturn(ret)
-    return c_count.value
+    return bytes_to_str(c_count.value)
 
 # This is deprecated, instead use nvmlDeviceGetMemoryErrorCounter
 def nvmlDeviceGetDetailedEccErrors(handle, errorType, counterType):
@@ -1199,7 +1207,7 @@ def nvmlDeviceGetDetailedEccErrors(handle, errorType, counterType):
     ret = fn(handle, _nvmlMemoryErrorType_t(errorType),
 	         _nvmlEccCounterType_t(counterType), byref(c_counts))
     _nvmlCheckReturn(ret)
-    return c_counts
+    return bytes_to_str(c_counts)
     
 # Added in 4.304
 def nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType, locationType):
@@ -1211,14 +1219,14 @@ def nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType, locationType
              _nvmlMemoryLocation_t(locationType),
              byref(c_count))
     _nvmlCheckReturn(ret)
-    return c_count.value
+    return bytes_to_str(c_count.value)
     
 def nvmlDeviceGetUtilizationRates(handle):
     c_util = c_nvmlUtilization_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetUtilizationRates")
     ret = fn(handle, byref(c_util))
     _nvmlCheckReturn(ret)
-    return c_util
+    return bytes_to_str(c_util)
 
 def nvmlDeviceGetEncoderUtilization(handle):
     c_util = c_uint()
@@ -1241,7 +1249,7 @@ def nvmlDeviceGetPcieReplayCounter(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPcieReplayCounter")
     ret = fn(handle, byref(c_replay))
     _nvmlCheckReturn(ret)
-    return c_replay.value
+    return bytes_to_str(c_replay.value)
 
 def nvmlDeviceGetDriverModel(handle):
     c_currModel = _nvmlDriverModel_t()
@@ -1265,7 +1273,7 @@ def nvmlDeviceGetVbiosVersion(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetVbiosVersion")
     ret = fn(handle, c_version, c_uint(NVML_DEVICE_VBIOS_VERSION_BUFFER_SIZE))
     _nvmlCheckReturn(ret)
-    return c_version.value
+    return bytes_to_str(c_version.value)
 
 # Added in 2.285
 def nvmlDeviceGetComputeRunningProcesses(handle):
@@ -1445,7 +1453,7 @@ def nvmlDeviceGetSupportedEventTypes(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetSupportedEventTypes")
     ret = fn(handle, byref(c_eventTypes))
     _nvmlCheckReturn(ret)
-    return c_eventTypes.value
+    return bytes_to_str(c_eventTypes.value)
 
 # Added in 2.285
 # raises NVML_ERROR_TIMEOUT exception on timeout
@@ -1454,7 +1462,7 @@ def nvmlEventSetWait(eventSet, timeoutms):
     data = c_nvmlEventData_t()
     ret = fn(eventSet, byref(data), c_uint(timeoutms))
     _nvmlCheckReturn(ret)
-    return data
+    return bytes_to_str(data)
 
 # Added in 2.285
 def nvmlEventSetFree(eventSet):
@@ -1477,7 +1485,7 @@ def nvmlDeviceGetCurrPcieLinkGeneration(handle):
     gen = c_uint()
     ret = fn(handle, byref(gen))
     _nvmlCheckReturn(ret)
-    return gen.value
+    return bytes_to_str(gen.value)
 
 # Added in 3.295
 def nvmlDeviceGetMaxPcieLinkGeneration(handle):
@@ -1485,7 +1493,7 @@ def nvmlDeviceGetMaxPcieLinkGeneration(handle):
     gen = c_uint()
     ret = fn(handle, byref(gen))
     _nvmlCheckReturn(ret)
-    return gen.value
+    return bytes_to_str(gen.value)
 
 # Added in 3.295
 def nvmlDeviceGetCurrPcieLinkWidth(handle):
@@ -1493,7 +1501,7 @@ def nvmlDeviceGetCurrPcieLinkWidth(handle):
     width = c_uint()
     ret = fn(handle, byref(width))
     _nvmlCheckReturn(ret)
-    return width.value
+    return bytes_to_str(width.value)
 
 # Added in 3.295
 def nvmlDeviceGetMaxPcieLinkWidth(handle):
@@ -1501,7 +1509,7 @@ def nvmlDeviceGetMaxPcieLinkWidth(handle):
     width = c_uint()
     ret = fn(handle, byref(width))
     _nvmlCheckReturn(ret)
-    return width.value
+    return bytes_to_str(width.value)
 
 # Added in 4.304
 def nvmlDeviceGetSupportedClocksThrottleReasons(handle):
@@ -1509,7 +1517,7 @@ def nvmlDeviceGetSupportedClocksThrottleReasons(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetSupportedClocksThrottleReasons")
     ret = fn(handle, byref(c_reasons))
     _nvmlCheckReturn(ret)
-    return c_reasons.value
+    return bytes_to_str(c_reasons.value)
 
 # Added in 4.304
 def nvmlDeviceGetCurrentClocksThrottleReasons(handle):
@@ -1517,7 +1525,7 @@ def nvmlDeviceGetCurrentClocksThrottleReasons(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetCurrentClocksThrottleReasons")
     ret = fn(handle, byref(c_reasons))
     _nvmlCheckReturn(ret)
-    return c_reasons.value
+    return bytes_to_str(c_reasons.value)
 
 # Added in 5.319
 def nvmlDeviceGetIndex(handle):
@@ -1525,7 +1533,7 @@ def nvmlDeviceGetIndex(handle):
     c_index = c_uint()
     ret = fn(handle, byref(c_index))
     _nvmlCheckReturn(ret)
-    return c_index.value
+    return bytes_to_str(c_index.value)
 
 # Added in 5.319
 def nvmlDeviceGetAccountingMode(handle):
@@ -1533,7 +1541,7 @@ def nvmlDeviceGetAccountingMode(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetAccountingMode")
     ret = fn(handle, byref(c_mode))
     _nvmlCheckReturn(ret)
-    return c_mode.value
+    return bytes_to_str(c_mode.value)
     
 def nvmlDeviceSetAccountingMode(handle, mode):
     fn = _nvmlGetFunctionPointer("nvmlDeviceSetAccountingMode")
@@ -1555,7 +1563,7 @@ def nvmlDeviceGetAccountingStats(handle, pid):
     if (stats.maxMemoryUsage == NVML_VALUE_NOT_AVAILABLE_ulonglong.value):
         # special case for WDDM on Windows, see comment above
         stats.maxMemoryUsage = None
-    return stats
+    return bytes_to_str(stats)
 
 def nvmlDeviceGetAccountingPids(handle):
     count = c_uint(nvmlDeviceGetAccountingBufferSize(handle))
@@ -1620,7 +1628,7 @@ def nvmlDeviceGetBridgeChipInfo(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetBridgeChipInfo")
     ret = fn(handle, byref(bridgeHierarchy))
     _nvmlCheckReturn(ret)
-    return bridgeHierarchy
+    return bytes_to_str(bridgeHierarchy)
 
 def nvmlDeviceGetSamples(device, sampling_type, timeStamp):
     c_sampling_type = _nvmlSamplingType_t(sampling_type)
@@ -1650,14 +1658,14 @@ def nvmlDeviceGetViolationStatus(device, perfPolicyType):
     ## Invoke the method to get violation time
     ret = fn(device, c_perfPolicy_type, byref(c_violTime))
     _nvmlCheckReturn(ret)
-    return c_violTime
+    return bytes_to_str(c_violTime)
     
 def nvmlDeviceGetPcieThroughput(device, counter):
     c_util = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetPcieThroughput")
     ret = fn(device, _nvmlPcieUtilCounter_t(counter), byref(c_util))
     _nvmlCheckReturn(ret)
-    return c_util.value
+    return bytes_to_str(c_util.value)
 
 def nvmlSystemGetTopologyGpuSet(cpuNumber):
     c_count = c_uint(0)
@@ -1698,4 +1706,4 @@ def nvmlDeviceGetTopologyCommonAncestor(device1, device2):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetTopologyCommonAncestor")
     ret = fn(device1, device2, byref(c_level))
     _nvmlCheckReturn(ret)
-    return c_level.value
+    return bytes_to_str(c_level.value)
