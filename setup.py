@@ -1,12 +1,14 @@
 from setuptools import setup, find_packages
 import os
 
+
 def read_file(path):
     with open(os.path.join(os.path.dirname(__file__), path), "r") as fobj:
         return fobj.read()
 
+
 setup(name='py3nvml',
-      version='0.0.1',
+      version='0.0.3',
       packages=find_packages(),
       description='Python 3 Bindings for the NVIDIA Management Library',
       py_modules=['pynvml', 'nvidia_smi'],
@@ -24,6 +26,5 @@ setup(name='py3nvml',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: System :: Hardware',
           'Topic :: System :: Systems Administration',
-          ],
-      )
-
+      ],
+)
