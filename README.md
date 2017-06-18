@@ -46,7 +46,7 @@ tensorflow where calls to tf.Session() grabs all available gpus.
 E.g.
 
     >>> import py3nvml
-    >>> py3nvml.grab_gpus(3))
+    >>> py3nvml.grab_gpus(3)
     >>> sess = tf.Session() # now we only grab 3 gpus!
 
 Or the following will grab 2 gpus from the first 4 (and leave any higher gpus untouched)
