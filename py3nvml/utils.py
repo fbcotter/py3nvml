@@ -4,7 +4,8 @@ from __future__ import print_function
 import logging
 import os
 import warnings
-from py3nvml.py3nvml import *
+from py3nvml import py3nvml
+
 
 def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     """
@@ -13,16 +14,16 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     Will first search for a GPU that is available and will set the correct
     environment variables so we don't try to use it. Calling this function will
     set the environment variable CUDA_VISIBLE_DEVICES, regardless of whether it
-    succeeds or not. 
-    
+    succeeds or not.
+
     This will be useful if it fails to find any free GPUs and
     raises an exception, the caller could then try themselves anyway and
     tensorflow will grab whatever it pleases, and potentially disrupt the other
     jobs. Now, if create_session fails, it will still have set the
     CUDA_VISIBLE_DEVICES env to be "".
-    
+
     :param num_gpus (optional) how many gpus your job needs
-    :param gpu_select (optional) a single int or an iterable of ints gpus to 
+    :param gpu_select (optional) a single int or an iterable of ints gpus to
         search through.  If left blank, will search through all gpus.
     :param gpu_fraction (optional) the fractional of a gpu memory that must be
         free for the script to see the gpu as free. Defaults to 1. Useful if
@@ -34,23 +35,24 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     :raises RuntimeWarning: If couldn't connect with NVIDIA drivers
     :raises ValueError: If the gpu_select option was not understood (leave
         blank, provide an int or an iterable of ints)
-    """ 
+    """
 
-    # Set the visible devices to blank. 
+    # Set the visible devices to blank.
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
-    # Try connect with NVIDIA drivers. This will
+    # Try connect with NVIDIA drivers
+    logger = logging.getLogger(__name__)
     try:
-        nvmlInit()
+        py3nvml.nvmlInit()
     except:
-        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly. 
+        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly.
                   Proceeding on cpu only..."""
         warnings.warn(str_, RuntimeWarning)
+        logger.warn(str_)
         return
 
-    numDevices = nvmlDeviceGetCount()
+    numDevices = py3nvml.nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
-
 
     # Flag which gpus we can check
     if gpu_select is None:
@@ -66,7 +68,6 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
             except:
                 raise ValueError('''Please provide an int or an iterable of ints
                     for gpu_select''')
-            
 
     # Print out GPU device info. Useful for debugging.
     for i in range(numDevices):
@@ -74,13 +75,13 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         if not gpu_check[i]:
             continue
 
-        handle = nvmlDeviceGetHandleByIndex(i)
-        info = nvmlDeviceGetMemoryInfo(handle)
-        
-        logging.info('\nGPU {}:\n{}'.format(i, '-'*30))
-        logging.info('Used Mem: {}MB'.format(info.used/(1024*1024)))
-        logging.info('Total Mem: {}MB'.format(info.total/(1024*1024)))
-        logging.info('')
+        handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
+        info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+        str_ = "GPU {}:\t".format(i) + \
+               "Used Mem: {:>6}MB\t".format(info.used/(1024*1024)) + \
+               "Total Mem: {:>6}MB".format(info.total/(1024*1024))
+        logger.debug(str_)
 
     # Now check if any devices are suitable
     for i in range(numDevices):
@@ -88,17 +89,16 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         if not gpu_check[i]:
             continue
 
-        handle = nvmlDeviceGetHandleByIndex(i)
-        info = nvmlDeviceGetMemoryInfo(handle)
+        handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
+        info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
 
-        # Sometimes GPU has a few MB used when it is actually free 
+        # Sometimes GPU has a few MB used when it is actually free
         if (info.free+10)/info.total >= gpu_fraction:
-            logging.info('GPU {} Free.'.format(i))
             gpu_free[i] = True
         else:
-            logging.info('GPU {} has processes on it. Skipping.'.format(i))
+            logger.info('GPU {} has processes on it. Skipping.'.format(i))
 
-    nvmlShutdown()
+    py3nvml.nvmlShutdown()
 
     # Now check whether we can create the session
     if sum(gpu_free) >= num_gpus:
@@ -108,10 +108,9 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
 
         use_gpus = ','.join(list(str(s) for s in available_gpus[:num_gpus]))
 
-        logging.info('{} Gpus found free'.format(sum(gpu_free)))
-        logging.info('Using {}'.format(use_gpus))
+        logger.debug('{} Gpus found free'.format(sum(gpu_free)))
+        logger.info('Using {}'.format(use_gpus))
         os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-        return 0 
+        return 0
     else:
         return -1
-
