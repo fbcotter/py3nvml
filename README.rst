@@ -67,7 +67,15 @@ Or the following will grab 2 gpus from the first 4 (and leave any higher gpus un
 
 This will look for 3 available gpus in the range of gpus from 0 to 3. The range
 option is not necessary, and it only serves to restrict the search space for
-the grab_gpus.
+the grab_gpus. This function has no return codes but will raise some
+warnings/exceptions:
+
+- If the method could not connect to any NVIDIA gpus, it will raise
+  a RuntimeWarning. 
+- If it could connect to the GPUs, but there were none available, it will 
+  raise a ValueError. 
+- If it could connect to the GPUs but not enough were available (i.e. more than
+  1 was requested), it will take everything it can and raise a RuntimeWarning.
 
 Regular Usage 
 '''''''''''''

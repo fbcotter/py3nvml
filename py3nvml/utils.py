@@ -30,11 +30,9 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
         someone has grabbed a tiny amount of memory on a gpu but isn't using
         it.
 
-    :returns 0 if successful, -1 if not.
-
     :raises RuntimeWarning: If couldn't connect with NVIDIA drivers
-    :raises ValueError: If the gpu_select option was not understood (leave
-        blank, provide an int or an iterable of ints)
+    :raises ValueError: If the function fails (either if the parameters were not
+        understood, or the GPUs were full.
     """
 
     # Set the visible devices to blank.
@@ -101,16 +99,28 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
     py3nvml.nvmlShutdown()
 
     # Now check whether we can create the session
-    if sum(gpu_free) >= num_gpus:
-        # only use the first num_gpus gpus. Hide the rest from greedy
-        # tensorflow
-        available_gpus = [i for i, x in enumerate(gpu_free) if x]
-
-        use_gpus = ','.join(list(str(s) for s in available_gpus[:num_gpus]))
-
-        logger.debug('{} Gpus found free'.format(sum(gpu_free)))
-        logger.info('Using {}'.format(use_gpus))
-        os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-        return 0
+    if sum(gpu_free) == 0:
+        raise ValueError("Could not find enough GPUs for your job")
     else:
-        return -1
+        if sum(gpu_free) >= num_gpus:
+            # only use the first num_gpus gpus. Hide the rest from greedy
+            # tensorflow
+            available_gpus = [i for i, x in enumerate(gpu_free) if x]
+            use_gpus = ','.join(list(str(s) for s in available_gpus[:num_gpus]))
+
+            logger.debug('{} Gpus found free'.format(sum(gpu_free)))
+            logger.info('Using {}'.format(use_gpus))
+            os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
+            return
+        else:
+            # use everything we can.
+            s = "Only {} GPUs found but {}".format(sum(gpu_free), num_gpus) + \
+                "requested. Allocating these and continuing."
+            warnings.warn(s, RuntimeWarning)
+            logger.warn(s)
+            available_gpus = [i for i, x in enumerate(gpu_free) if x]
+
+            logger.debug('{} Gpus found free'.format(sum(gpu_free)))
+            logger.info('Using {}'.format(use_gpus))
+            os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
+            return
