@@ -186,8 +186,8 @@ All meaningful NVML constants and enums are exposed in Python.
 
 The `NVML_VALUE_NOT_AVAILABLE` constant is not used.  Instead None is mapped to the field.
 
-Release Notes
--------------
+Release Notes (for pynvml)
+--------------------------
 Version 2.285.0
 
 - Added new functions for NVML 2.285.  See NVML documentation for more information.
