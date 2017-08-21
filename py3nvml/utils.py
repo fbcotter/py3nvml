@@ -107,7 +107,6 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
             # tensorflow
             available_gpus = [i for i, x in enumerate(gpu_free) if x]
             use_gpus = ','.join(list(str(s) for s in available_gpus[:num_gpus]))
-
             logger.debug('{} Gpus found free'.format(sum(gpu_free)))
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
@@ -119,7 +118,7 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
             warnings.warn(s, RuntimeWarning)
             logger.warn(s)
             available_gpus = [i for i, x in enumerate(gpu_free) if x]
-
+            use_gpus = ','.join(list(str(s) for s in available_gpus))
             logger.debug('{} Gpus found free'.format(sum(gpu_free)))
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
