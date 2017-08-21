@@ -78,7 +78,8 @@ Regular Usage
     from py3nvml.py3nvml import *
     nvmlInit()
     print("Driver Version: {}".format(str(nvmlSystemGetDriverVersion())))
-    # e.g. will print Driver Version: 352.00
+    # e.g. will print:
+    #   Driver Version: 352.00
     deviceCount = nvmlDeviceGetCount()
     for i in range(deviceCount):
         handle = nvmlDeviceGetHandleByIndex(i)
@@ -122,7 +123,7 @@ Each function's use is the same with the following exceptions:
 - C function output parameters are returned from the corresponding
   Python function left to right. Eg the C function:
     
-.. code:: c
+  .. code:: c
 
     nvmlReturn_t nvmlDeviceGetEccMode(nvmlDevice_t device,
                                       nvmlEnableState_t *current,
@@ -130,17 +131,15 @@ Each function's use is the same with the following exceptions:
 
   Can be called like so:
 
-.. code:: python
+  .. code:: python
 
     nvmlInit()
     handle = nvmlDeviceGetHandleByIndex(0)
     (current, pending) = nvmlDeviceGetEccMode(handle)
 
-- C structs are converted into Python classes.
+- C structs are converted into Python classes. E.g. the C struct:
 
-    E.g. the C struct:
-
-.. code:: c
+  .. code:: c
 
     nvmlReturn_t DECLDIR nvmlDeviceGetMemoryInfo(nvmlDevice_t device,
                                                  nvmlMemory_t *memory);
@@ -152,25 +151,29 @@ Each function's use is the same with the following exceptions:
 
   Becomes:
 
-.. code:: python
+  .. code:: python
 
     info = nvmlDeviceGetMemoryInfo(handle)
     print("Total memory: {}".format(info.total))
-    # will print "Total memory: 5636292608"
+    # will print:
+    #   Total memory: 5636292608
     print("Free memory: {}".format(info.free))
-    # will print "Free memory: 5578420224"
+    # will print:
+    #   Free memory: 5578420224
     print("Used memory: ".format(info.used))
-    # will print "Used memory: 57872384"
+    # will print:
+    #   Used memory: 57872384
 
 - Python handles string buffer creation.  E.g. the C function:
 
-.. code:: c
+  .. code:: c
 
     nvmlReturn_t nvmlSystemGetDriverVersion(char* version,
                                             unsigned int length);
+
   Can be called like so:
 
-.. code:: python
+  .. code:: python
 
     version = nvmlSystemGetDriverVersion()
     nvmlShutdown()
