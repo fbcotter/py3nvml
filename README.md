@@ -1,31 +1,26 @@
-# fbcotter/py3nvml
+# py3nvml
 
-Python 3 compatible bindings to the NVIDIA Management Library
+Python 3 compatible bindings to the NVIDIA Management Library. Can be used to
+query the state of the GPUs on your system. This was ported from the NVIDIA
+provided python bindings 
+[nvidia-ml-py](https://pypi.python.org/pypi/nvidia-ml-py/7.352.0), which only 
+supported python 2. I have forked from version 7.352.0. The old library was 
+itself a wrapper around the [NVIDIA
+Management Library](http://developer.nvidia.com/nvidia-management-library-nvml).
+ 
+In addition to the functions to query the state of the GPU, I have written
+a function to 'restrict' the available GPUs by setting the CUDA_VISIBLE_DEVICES
+environment variable. See the Utils section below for more info.
 
-Origin python library can be found here
-[nvidia-ml-py](https://pypi.python.org/pypi/nvidia-ml-py/7.352.0). I have
-forked from version 7.352.0. 
+# Requires
+Python 3.5+.
 
-This is from an NVIDIA sponsored library, but that only works for python
-versions before 2.5. 
+# Installation 
+## From PyPi
 
-This package was created from the NVIDIA library by running **2to3** on it, and
-making it pip importable. (Also changed the README from a .txt to a .md).
+    $ pip install py3nvml
 
-## Info on NVIDIA Management Library
-
-Provides a Python interface to GPU management and monitoring functions.
-
-It is a wrapper around the NVML library. 
-
-For information about the NVML library, see the NVML developer page
-http://developer.nvidia.com/nvidia-management-library-nvml
-
-
-## Requires
-Python 3.5. Haven't tested on python3.6 but may well work.
-
-## Installation 
+## From GitHub
 Direct install from github (useful if you use pip freeze)
     
     $ pip install -e git+https://github.com/fbcotter/py3nvml#egg=py3nvml
@@ -36,6 +31,7 @@ Download and pip install from Git:
     $ cd py3nvml
     $ pip install .
 
+# Package Description
 ## Utils (added by me - not ported from NVIDIA library)
 
 You can call the grab_gpus(num_gpus, gpu_select) function to check the
@@ -59,7 +55,7 @@ This will look for 3 available gpus in the range of gpus from 2 to 6. The range
 option is not necessary, and it only serves to restrict the search space for
 the grab_gpus.
 
-### Special TF Utils usage (deprecated and will be removed in future)
+## Special TF Utils usage (deprecated and will be removed in future)
 
 If you are using Tensorflow, I have included a helper function to query the
 gpus and create a session. As py3nvml should work without tensorflow, you have
@@ -73,7 +69,7 @@ Have a closer look at the docstring for create_session, but the above example
 attempst to create a session using 3 gpus, by searching the first 6 gpus for
 available memory. 
 
-## Usage (below here is ported from the standard NVIDIA library)
+## Regular Usage (below here is everything ported from pynvml)
 
     >>> from py3nvml.py3nvml import *
     >>> nvmlInit()
@@ -135,7 +131,7 @@ Each function's use is the same with the following exceptions:
     ```
 
 - C structs are converted into Python classes.
-    
+
     E.g. the C struct:
     ```C
     nvmlReturn_t DECLDIR nvmlDeviceGetMemoryInfo(nvmlDevice_t device,
@@ -146,7 +142,7 @@ Each function's use is the same with the following exceptions:
         unsigned long long used;
     } nvmlMemory_t;
     ```
-    
+
     Becomes:
     ```python
     >>> info = nvmlDeviceGetMemoryInfo(handle)
