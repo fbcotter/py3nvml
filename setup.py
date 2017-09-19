@@ -28,7 +28,7 @@ setup(name='py3nvml',
       long_description=read('README.rst'),
       license="BSD",
       url="https://github.com/fbcotter/py3nvml.git",
-      download_url="https://github.com/fbcotter/py3nvml/archive/0.1.0rc4.tar.gz",
+      download_url="https://github.com/fbcotter/py3nvml/archive/" + get_version() + ".tar.gz",
       classifiers=[
           'Programming Language :: Python :: 3.5',
           'Development Status :: 3 - Alpha',
