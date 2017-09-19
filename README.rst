@@ -85,13 +85,13 @@ Regular Usage
 
     from py3nvml.py3nvml import *
     nvmlInit()
-    print("Driver Version: {}".format(str(nvmlSystemGetDriverVersion())))
+    print("Driver Version: {}".format(nvmlSystemGetDriverVersion()))
     # e.g. will print:
     #   Driver Version: 352.00
     deviceCount = nvmlDeviceGetCount()
     for i in range(deviceCount):
         handle = nvmlDeviceGetHandleByIndex(i)
-        print("Device {}: {}".format(i, str(nvmlDeviceGetName(handle))))
+        print("Device {}: {}".format(i, nvmlDeviceGetName(handle)))
     # e.g. will print:
     #  Device 0 : Tesla K40c
     #  Device 1 : Tesla K40c

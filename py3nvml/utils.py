@@ -7,36 +7,60 @@ import warnings
 from py3nvml import py3nvml
 
 
-def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
+def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
     """
     Checks for gpu availability and sets CUDA_VISIBLE_DEVICES as such.
 
-    Will first search for a GPU that is available and will set the correct
-    environment variables so we don't try to use it. Calling this function will
-    set the environment variable CUDA_VISIBLE_DEVICES, regardless of whether it
-    succeeds or not.
+    Note that this function does not do anything to 'reserve' gpus, it only
+    limits what GPUS your program can see by altering the CUDA_VISIBLE_DEVICES
+    variable. Other programs can still come along and snatch your gpu. This
+    function is more about preventing **you** from stealing someone else's GPU.
 
-    This will be useful if it fails to find any free GPUs and
-    raises an exception, the caller could then try themselves anyway and
-    tensorflow will grab whatever it pleases, and potentially disrupt the other
-    jobs. Now, if create_session fails, it will still have set the
-    CUDA_VISIBLE_DEVICES env to be "".
+    If more than 1 GPU is requested but the full amount are available, then it
+    will set the CUDA_VISIBLE_DEVICES variable to see all the available GPUs.
+    A warning is generated in this case.
 
-    :param num_gpus (optional) how many gpus your job needs
-    :param gpu_select (optional) a single int or an iterable of ints gpus to
+    If one or more GPUs were requested and none were available, a ValueError
+    will be raised. Before raising it, the CUDA_VISIBLE_DEVICES will be set to a
+    blank string. This means the calling function can catch this error and
+    proceed if it chooses to only use the CPU, and it should still be protected
+    against putting processes on a busy GPU.
+
+    You can call this function with num_gpus=0 to blank out the
+    CUDA_VISIBLE_DEVICES environment variable.
+
+    Parameters
+    ----------
+    num_gpus : int
+        How many gpus your job needs (optional)
+    gpu_select : iterable
+        A single int or an iterable of ints indicating gpu numbers to
         search through.  If left blank, will search through all gpus.
-    :param gpu_fraction (optional) the fractional of a gpu memory that must be
-        free for the script to see the gpu as free. Defaults to 1. Useful if
-        someone has grabbed a tiny amount of memory on a gpu but isn't using
-        it.
+    gpu_fraction : float
+        The fractional of a gpu memory that must be free for the script to see
+        the gpu as free. Defaults to 1. Useful if someone has grabbed a tiny
+        amount of memory on a gpu but isn't using it.
 
-    :raises RuntimeWarning: If couldn't connect with NVIDIA drivers
-    :raises ValueError: If the function fails (either if the parameters were not
-        understood, or the GPUs were full.
+    Returns
+    -------
+    success : int
+        Number of gpus 'grabbed'
+
+    Raises
+    ------
+    RuntimeWarning
+        If couldn't connect with NVIDIA drivers.
+    ValueError
+        If the gpu_select option was not understood (can fix by leaving this
+        field blank, providing an int or an iterable of ints).
+    ValueError
+        If 1 or more gpus were requested and none were available.
     """
-
     # Set the visible devices to blank.
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
+
+    if num_gpus == 0:
+        return 0
 
     # Try connect with NVIDIA drivers
     logger = logging.getLogger(__name__)
@@ -110,7 +134,7 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
             logger.debug('{} Gpus found free'.format(sum(gpu_free)))
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-            return
+            return num_gpus
         else:
             # use everything we can.
             s = "Only {} GPUs found but {}".format(sum(gpu_free), num_gpus) + \
@@ -122,4 +146,4 @@ def grab_gpus(num_gpus=1,gpu_select=None, gpu_fraction=1.0):
             logger.debug('{} Gpus found free'.format(sum(gpu_free)))
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
-            return
+            return sum(gpu_free)

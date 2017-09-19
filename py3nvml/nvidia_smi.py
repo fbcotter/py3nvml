@@ -3,7 +3,7 @@
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #    * Redistributions of source code must retain the above copyright notice,
 #      this list of conditions and the following disclaimer.
 #    * Redistributions in binary form must reproduce the above copyright
@@ -18,11 +18,11 @@
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
 # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 #####
 
@@ -47,49 +47,49 @@ import datetime
 #
 def GetEccByType(handle, counterType, errorType):
     strResult = ''
-    
+
     try:
         deviceMemory = nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType,
                                                        NVML_MEMORY_LOCATION_DEVICE_MEMORY)
     except NVMLError as err:
         deviceMemory = handleError(err)
     strResult += '          <device_memory>' + str(deviceMemory) + '</device_memory>\n'
-    
+
     try:
         registerFile = nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType,
                                                        NVML_MEMORY_LOCATION_REGISTER_FILE)
     except NVMLError as err:
         registerFile = handleError(err)
-    
+
     strResult += '          <register_file>' + str(registerFile) + '</register_file>\n'
-    
+
     try:
         l1Cache = nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType,
                                                   NVML_MEMORY_LOCATION_L1_CACHE)
     except NVMLError as err:
         l1Cache = handleError(err)
     strResult += '          <l1_cache>' + str(l1Cache) + '</l1_cache>\n'
-    
+
     try:
         l2Cache = nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType,
                                                   NVML_MEMORY_LOCATION_L2_CACHE)
     except NVMLError as err:
         l2Cache = handleError(err)
     strResult += '          <l2_cache>' + str(l2Cache) + '</l2_cache>\n'
-    
+
     try:
         textureMemory = nvmlDeviceGetMemoryErrorCounter(handle, errorType, counterType,
                                                         NVML_MEMORY_LOCATION_TEXTURE_MEMORY)
     except NVMLError as err:
         textureMemory = handleError(err)
     strResult += '          <texture_memory>' + str(textureMemory) + '</texture_memory>\n'
-    
+
     try:
         count = str(nvmlDeviceGetTotalEccErrors(handle, errorType, counterType))
     except NVMLError as err:
         count = handleError(err)
     strResult += '          <total>' + count + '</total>\n'
-    
+
     return strResult
 
 def GetEccByCounter(handle, counterType):
@@ -115,7 +115,7 @@ def GetEccStr(handle):
 def GetRetiredPagesByCause(handle, cause):
     strResult = ''
     try:
-        pages = nvmlDeviceGetRetiredPages(handle, cause)   
+        pages = nvmlDeviceGetRetiredPages(handle, cause)
         count = str(len(pages))
     except NVMLError as err:
         error = handleError(err)
@@ -149,7 +149,7 @@ def GetRetiredPagesStr(handle):
         strResult += handleError(err)
     strResult += '</pending_retirement>\n'
     return strResult
-    
+
 def StrGOM(mode):
     if mode == NVML_GOM_ALL_ON:
         return "All On";
@@ -188,7 +188,7 @@ def GetClocksThrottleReasons(handle):
         strResult += '    <clocks_throttle_reasons>%s</clocks_throttle_reasons>\n' % (handleError(err));
 
     return strResult;
-        
+
 #
 # Converts errors into string messages
 #
@@ -220,13 +220,13 @@ def XmlDeviceQuery():
 
         for i in range(0, deviceCount):
             handle = nvmlDeviceGetHandleByIndex(i)
-            
-            pciInfo = nvmlDeviceGetPciInfo(handle)    
-            
+
+            pciInfo = nvmlDeviceGetPciInfo(handle)
+
             strResult += '  <gpu id="%s">\n' % pciInfo.busId
-            
+
             strResult += '    <product_name>' + str(nvmlDeviceGetName(handle)) + '</product_name>\n'
-            
+
             brandNames = {NVML_BRAND_UNKNOWN :  "Unknown",
                           NVML_BRAND_QUADRO  :  "Quadro",
                           NVML_BRAND_TESLA   :  "Tesla",
@@ -243,52 +243,52 @@ def XmlDeviceQuery():
 
 
             strResult += '    <product_brand>' + brandName + '</product_brand>\n'
-                
+
             try:
                 state = ('Enabled' if (nvmlDeviceGetDisplayMode(handle) != 0) else 'Disabled')
             except NVMLError as err:
                 state = handleError(err)
-            
+
             strResult += '    <display_mode>' + state + '</display_mode>\n'
-            
+
             try:
                 state = ('Enabled' if (nvmlDeviceGetDisplayActive(handle) != 0) else 'Disabled')
             except NVMLError as err:
                 state = handleError(err)
-            
+
             strResult += '    <display_active>' + state + '</display_active>\n'
-            
+
             try:
                 mode = 'Enabled' if (nvmlDeviceGetPersistenceMode(handle) != 0) else 'Disabled'
             except NVMLError as err:
                 mode = handleError(err)
-            
+
             strResult += '    <persistence_mode>' + mode + '</persistence_mode>\n'
-            
+
             try:
                 mode = 'Enabled' if (nvmlDeviceGetAccountingMode(handle) != 0) else 'Disabled'
             except NVMLError as err:
                 mode = handleError(err)
-            
+
             strResult += '    <accounting_mode>' + mode + '</accounting_mode>\n'
-           
+
             try:
                 bufferSize = str(nvmlDeviceGetAccountingBufferSize(handle))
             except NVMLError as err:
                 bufferSize = handleError(err)
-            
+
             strResult += '    <accounting_mode_buffer_size>' + bufferSize + '</accounting_mode_buffer_size>\n'
-                
+
             strResult += '    <driver_model>\n'
 
             try:
-                current = 'WDDM' if (nvmlDeviceGetCurrentDriverModel(handle) == NVML_DRIVER_WDDM) else 'TCC' 
+                current = 'WDDM' if (nvmlDeviceGetCurrentDriverModel(handle) == NVML_DRIVER_WDDM) else 'TCC'
             except NVMLError as err:
                 current = handleError(err)
             strResult += '      <current_dm>' + current + '</current_dm>\n'
 
             try:
-                pending = 'WDDM' if (nvmlDeviceGetPendingDriverModel(handle) == NVML_DRIVER_WDDM) else 'TCC' 
+                pending = 'WDDM' if (nvmlDeviceGetPendingDriverModel(handle) == NVML_DRIVER_WDDM) else 'TCC'
             except NVMLError as err:
                 pending = handleError(err)
 
@@ -309,14 +309,14 @@ def XmlDeviceQuery():
                 uuid = handleError(err)
 
             strResult += '    <uuid>' + uuid + '</uuid>\n'
-            
+
             try:
                 minor_number = str(nvmlDeviceGetMinorNumber(handle))
             except NVMLError as err:
                 minor_number = handleError(err)
 
             strResult += '    <minor_number>' + str(minor_number) + '</minor_number>\n'
-            
+
             try:
                 vbios = str(nvmlDeviceGetVbiosVersion(handle))
             except NVMLError as err:
@@ -343,41 +343,41 @@ def XmlDeviceQuery():
 
             try:
                 hexBID = "0x%x" % boardId
-            except: 
+            except:
                 hexBID = boardId
 
             strResult += '    <board_id>' + hexBID + '</board_id>\n'
 
             strResult += '    <inforom_version>\n'
-            
+
             try:
                 img = str(nvmlDeviceGetInforomImageVersion(handle))
             except NVMLError as err:
                 img = handleError(err)
-                
+
             strResult += '      <img_version>' + img + '</img_version>\n'
 
             try:
                 oem = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_OEM))
             except NVMLError as err:
                 oem = handleError(err)
-                
+
             strResult += '      <oem_object>' + oem + '</oem_object>\n'
-            
+
             try:
                 ecc = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_ECC))
             except NVMLError as err:
                 ecc = handleError(err)
-            
+
             strResult += '      <ecc_object>' + ecc + '</ecc_object>\n'
 
             try:
                 pwr = str(nvmlDeviceGetInforomVersion(handle, NVML_INFOROM_POWER))
             except NVMLError as err:
                 pwr = handleError(err)
-            
+
             strResult += '      <pwr_object>' + pwr + '</pwr_object>\n'
-                       
+
             strResult += '    </inforom_version>\n'
 
             strResult += '    <gpu_operation_mode>\n'
@@ -451,7 +451,7 @@ def XmlDeviceQuery():
                 if bridgeHierarchy.bridgeChipInfo[0].type == 0:
                     bridge_type += 'PLX'
                 else:
-                    bridge_type += 'BR04'                    
+                    bridge_type += 'BR04'
                 strResult += '        <bridge_chip_type>' + bridge_type + '</bridge_chip_type>\n'
 
                 if bridgeHierarchy.bridgeChipInfo[0].fwVersion == 0:
@@ -463,7 +463,7 @@ def XmlDeviceQuery():
                 strResult += '        <bridge_chip_type>' + handleError(err) + '</bridge_chip_type>\n'
                 strResult += '        <bridge_chip_fw>' + handleError(err) + '</bridge_chip_fw>\n'
 
-            # Add additional code for hierarchy of bridges for Bug # 1382323                
+            # Add additional code for hierarchy of bridges for Bug # 1382323
             strResult += '      </pci_bridge_chip>\n'
 
             try:
@@ -535,7 +535,7 @@ def XmlDeviceQuery():
             strResult += '      <used>' + mem_used + '</used>\n'
             strResult += '      <free>' + mem_free + '</free>\n'
             strResult += '    </bar1_memory_usage>\n'
-            
+
             try:
                 mode = nvmlDeviceGetComputeMode(handle)
                 if mode == NVML_COMPUTEMODE_DEFAULT:
@@ -561,7 +561,7 @@ def XmlDeviceQuery():
                 error = handleError(err)
                 gpu_util = error
                 mem_util = error
-            
+
             strResult += '    <utilization>\n'
             strResult += '      <gpu_util>' + gpu_util + '</gpu_util>\n'
             strResult += '      <memory_util>' + mem_util + '</memory_util>\n'
@@ -585,7 +585,7 @@ def XmlDeviceQuery():
             strResult += '      <decoder_util>' + decoder_util + '</decoder_util>\n'
 
             strResult += '    </utilization>\n'
-            
+
             try:
                 (current, pending) = nvmlDeviceGetEccMode(handle)
                 curr_str = 'Enabled' if (current != 0) else 'Disabled'
@@ -607,7 +607,7 @@ def XmlDeviceQuery():
             strResult += '    <retired_pages>\n'
             strResult += GetRetiredPagesStr(handle)
             strResult += '    </retired_pages>\n'
-            
+
             try:
                 temp = str(nvmlDeviceGetTemperature(handle, NVML_TEMPERATURE_GPU)) + ' C'
             except NVMLError as err:
@@ -713,7 +713,7 @@ def XmlDeviceQuery():
                 mem = handleError(err)
             strResult += '      <mem_clock>' + mem + '</mem_clock>\n'
             strResult += '    </applications_clocks>\n'
-            
+
             strResult += '    <default_applications_clocks>\n'
             try:
                 graphics = str(nvmlDeviceGetDefaultApplicationsClock(handle, NVML_CLOCK_GRAPHICS)) + ' MHz'
@@ -744,7 +744,7 @@ def XmlDeviceQuery():
                 mem = handleError(err)
             strResult += '      <mem_clock>' + mem + '</mem_clock>\n'
             strResult += '    </max_clocks>\n'
-            
+
             strResult += '    <clock_policy>\n'
             try:
                 boostedState, boostedDefaultState = nvmlDeviceGetAutoBoostedClocksEnabled(handle)
@@ -752,12 +752,12 @@ def XmlDeviceQuery():
                     autoBoostStr = "Off"
                 else:
                     autoBoostStr = "On"
-                
+
                 if boostedDefaultState == NVML_FEATURE_DISABLED:
                     autoBoostDefaultStr = "Off"
                 else:
                     autoBoostDefaultStr = "On"
-                
+
             except NVMLError_NotSupported:
                 autoBoostStr = "N/A"
                 autoBoostDefaultStr = "N/A"
@@ -791,7 +791,7 @@ def XmlDeviceQuery():
             try:
                 procs = nvmlDeviceGetComputeRunningProcesses(handle)
                 strResult += '    <processes>\n'
-             
+
                 for p in procs:
                     try:
                         name = str(nvmlSystemGetProcessName(p.pid))
@@ -801,7 +801,7 @@ def XmlDeviceQuery():
                             continue
                         else:
                             name = handleError(err)
-                    
+
                     strResult += '    <process_info>\n'
                     strResult += '      <pid>%d</pid>\n' % p.pid
                     strResult += '      <process_name>' + name + '</process_name>\n'
@@ -812,19 +812,19 @@ def XmlDeviceQuery():
                         mem = '%d MiB' % (p.usedGpuMemory / 1024 / 1024)
                     strResult += '      <used_memory>' + mem + '</used_memory>\n'
                     strResult += '    </process_info>\n'
-                
+
                 strResult += '    </processes>\n'
             except NVMLError as err:
                 strResult += '    <processes>' + handleError(err) + '</processes>\n'
-            
+
 
             try:
                 pids = nvmlDeviceGetAccountingPids(handle)
                 strResult += '    <accounted_processes>\n'
-             
+
                 for pid in pids :
                     try:
-                        stats = nvmlDeviceGetAccountingStats(handle, pid) 
+                        stats = nvmlDeviceGetAccountingStats(handle, pid)
                         gpuUtilization = "%d %%" % stats.gpuUtilization
                         memoryUtilization = "%d %%" % stats.memoryUtilization
                         if (stats.maxMemoryUsage == None):
@@ -843,7 +843,7 @@ def XmlDeviceQuery():
                         maxMemoryUsage = err
                         time = err
                         is_running = err
-                    
+
                     strResult += '    <accounted_process_info>\n'
                     strResult += '      <pid>%d</pid>\n' % pid
                     strResult += '      <gpu_util>' + gpuUtilization + '</gpu_util>\n'
@@ -852,21 +852,22 @@ def XmlDeviceQuery():
                     strResult += '      <time>' + time + '</time>\n'
                     strResult += '      <is_running>' + is_running + '</is_running>\n'
                     strResult += '    </accounted_process_info>\n'
-                
+
                 strResult += '    </accounted_processes>\n'
             except NVMLError as err:
                 strResult += '    <accounted_processes>' + handleError(err) + '</accounted_processes>\n'
 
             strResult += '  </gpu>\n'
-            
+
         strResult += '</nvidia_smi_log>\n'
-        
+
     except NVMLError as err:
         strResult += 'nvidia_smi.py: ' + err.__str__() + '\n'
-    
+
     nvmlShutdown()
-    
+
     return strResult
+
 
 # this is not exectued when module is imported
 if __name__ == "__main__":
