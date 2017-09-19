@@ -20,9 +20,9 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
     will set the CUDA_VISIBLE_DEVICES variable to see all the available GPUs.
     A warning is generated in this case.
 
-    If one or more GPUs were requested and none were available, a ValueError
+    If one or more GPUs were requested and none were available, a Warning
     will be raised. Before raising it, the CUDA_VISIBLE_DEVICES will be set to a
-    blank string. This means the calling function can catch this error and
+    blank string. This means the calling function can ignore this warning and
     proceed if it chooses to only use the CPU, and it should still be protected
     against putting processes on a busy GPU.
 
@@ -50,11 +50,10 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
     ------
     RuntimeWarning
         If couldn't connect with NVIDIA drivers.
+        If 1 or more gpus were requested and none were available.
     ValueError
         If the gpu_select option was not understood (can fix by leaving this
         field blank, providing an int or an iterable of ints).
-    ValueError
-        If 1 or more gpus were requested and none were available.
     """
     # Set the visible devices to blank.
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
@@ -71,7 +70,7 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
                   Proceeding on cpu only..."""
         warnings.warn(str_, RuntimeWarning)
         logger.warn(str_)
-        return
+        return 0
 
     numDevices = py3nvml.nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
@@ -124,7 +123,9 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
 
     # Now check whether we can create the session
     if sum(gpu_free) == 0:
-        raise ValueError("Could not find enough GPUs for your job")
+        warnings.warn("Could not find enough GPUs for your job", RuntimeWarning)
+        logger.warn(str_)
+        return 0
     else:
         if sum(gpu_free) >= num_gpus:
             # only use the first num_gpus gpus. Hide the rest from greedy
