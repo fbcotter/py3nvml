@@ -173,21 +173,21 @@ def GetClocksThrottleReasons(handle):
     strResult = ''
 
     try:
-        supportedClocksThrottleReasons = nvmlDeviceGetSupportedClocksThrottleReasons(handle);
-        clocksThrottleReasons = nvmlDeviceGetCurrentClocksThrottleReasons(handle);
+        supportedClocksThrottleReasons = nvmlDeviceGetSupportedClocksThrottleReasons(handle)
+        clocksThrottleReasons = nvmlDeviceGetCurrentClocksThrottleReasons(handle)
         strResult += '    <clocks_throttle_reasons>\n'
         for (mask, name) in throttleReasons:
             if (name != "clocks_throttle_reason_user_defined_clocks"):
                 if (mask & supportedClocksThrottleReasons):
-                    val = "Active" if mask & clocksThrottleReasons else "Not Active";
+                    val = "Active" if mask & clocksThrottleReasons else "Not Active"
                 else:
-                    val = handleError(NVML_ERROR_NOT_SUPPORTED);
-                strResult += "      <%s>%s</%s>\n" % (name, val, name);
+                    raise NVMLError(NVML_ERROR_NOT_SUPPORTED)
+                strResult += "      <%s>%s</%s>\n" % (name, val, name)
         strResult += '    </clocks_throttle_reasons>\n'
     except NVMLError as err:
-        strResult += '    <clocks_throttle_reasons>%s</clocks_throttle_reasons>\n' % (handleError(err));
+        strResult += '    <clocks_throttle_reasons>%s</clocks_throttle_reasons>\n' % (handleError(err))
 
-    return strResult;
+    return strResult
 
 #
 # Converts errors into string messages
