@@ -181,7 +181,7 @@ def GetClocksThrottleReasons(handle):
                 if (mask & supportedClocksThrottleReasons):
                     val = "Active" if mask & clocksThrottleReasons else "Not Active"
                 else:
-                    raise NVMLError(NVML_ERROR_NOT_SUPPORTED)
+                    handleError(NVMLError(NVML_ERROR_NOT_SUPPORTED))
                 strResult += "      <%s>%s</%s>\n" % (name, val, name)
         strResult += '    </clocks_throttle_reasons>\n'
     except NVMLError as err:
