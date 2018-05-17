@@ -52,12 +52,12 @@ Utils
 grab_gpus
 ~~~~~~~~~
 
-You can call the `grab_gpus(num_gpus, gpu_select)` function to check the
+You can call the :code:`grab_gpus(num_gpus, gpu_select)` function to check the
 available gpus and set the `CUDA_VISIBLE_DEVICES` environment variable as need
 be. It determines if a GPU is available by checking if the memory-usage is 0%. 
 
 I have found this useful as I have a shared gpu server and like to use
-tensorflow which is very greedy and calls to `tf.Session()` grabs all available gpus.
+tensorflow which is very greedy and calls to :code:`tf.Session()` grabs all available gpus.
 
 E.g.
 
@@ -80,7 +80,7 @@ option is not necessary, and it only serves to restrict the search space for
 the grab_gpus. 
 
 You can adjust the memory threshold for determining if a GPU is free/used with
-the `gpu_fraction` parameter (default is 1):
+the :code:`gpu_fraction` parameter (default is 1):
 
 .. code:: python
     
