@@ -10,10 +10,15 @@ itself a wrapper around the `NVIDIA Management Library`__.
 __ https://pypi.python.org/pypi/nvidia-ml-py/7.352.0
 __ http://developer.nvidia.com/nvidia-management-library-nvml
 
-In addition to the functions to query the state of the GPU, I have written
-a function to 'restrict' the available GPUs by setting the
-`CUDA_VISIBLE_DEVICES` environment variable. See the Utils section below for
-more info.
+In addition to these NVIDIA functions to query the state of the GPU, I have written
+a couple functions/tools to help in using gpus (particularly for a shared
+gpu server). These are:
+
+- A function to 'restrict' the available GPUs by setting the `CUDA_VISIBLE_DEVICES` 
+  environment variable. 
+- A script for displaying a differently formatted nvidia-smi.
+
+See the Utils section below for more info.
 
 Requires
 --------
@@ -44,10 +49,15 @@ Utils
 '''''
 (Added by me - not ported from NVIDIA library)
 
+grab_gpus
+~~~~~~~~~
+
 You can call the `grab_gpus(num_gpus, gpu_select)` function to check the
 available gpus and set the `CUDA_VISIBLE_DEVICES` environment variable as need
-be. This is useful if you have a shared resource, and are using a library like
-tensorflow where calls to `tf.Session()` grabs all available gpus.
+be. It determines if a GPU is available by checking if the memory-usage is 0%. 
+
+I have found this useful as I have a shared gpu server and like to use
+tensorflow which is very greedy and calls to `tf.Session()` grabs all available gpus.
 
 E.g.
 
@@ -67,8 +77,19 @@ Or the following will grab 2 gpus from the first 4 (and leave any higher gpus un
 
 This will look for 3 available gpus in the range of gpus from 0 to 3. The range
 option is not necessary, and it only serves to restrict the search space for
-the grab_gpus. This function has no return codes but will raise some
-warnings/exceptions:
+the grab_gpus. 
+
+You can adjust the memory threshold for determining if a GPU is free/used with
+the `gpu_fraction` parameter (default is 1):
+
+.. code:: python
+    
+    import py3nvml
+    # Will allocate a GPU if less than 10% of its memory is being used
+    py3nvml.grab_gpus(num_gpus=2, gpu_fraction=0.9)
+    sess = tf.Session() 
+
+This function has no return codes but may raise some warnings/exceptions:
 
 - If the method could not connect to any NVIDIA gpus, it will raise
   a RuntimeWarning. 
@@ -76,6 +97,23 @@ warnings/exceptions:
   raise a ValueError. 
 - If it could connect to the GPUs but not enough were available (i.e. more than
   1 was requested), it will take everything it can and raise a RuntimeWarning.
+
+py3smi
+~~~~~~
+I found the default `nvidia-smi` output was missing some useful info, so made use of the
+`py3nvml/nvidia_smi.py` module to query the device and return XML info on the
+GPUs, and then defined my own printout. I have included this as a script in
+`scripts/py3smi`. Running pip install will now put this script in your python's
+bin, and you'll be able to run it from the command line. Here is a comparison of
+the two outputs:
+
+.. image:: images/nvidia_smi.png
+
+.. image:: images/py3smi.png
+
+For py3smi, you can specify an update period so it will refresh the feed every
+few seconds. I.e., similar to :code:`watch -n5 nvidia-smi`, you can run
+:code:`py3smi -l 5`.
 
 Regular Usage 
 '''''''''''''
