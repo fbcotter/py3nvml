@@ -111,6 +111,9 @@ the two outputs:
 
 .. image:: images/py3smi.png
 
+For py3smi, you can specify an update period so it will refresh the feed every
+few seconds. I.e., similar to :code:`watch -n5 nvidia-smi`, you can run
+:code:`py3smi -l 5`.
 
 Regular Usage 
 '''''''''''''
