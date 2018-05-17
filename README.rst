@@ -107,9 +107,9 @@ GPUs, and then defined my own printout. I have included this as a script in
 bin, and you'll be able to run it from the command line. Here is a comparison of
 the two outputs:
 
-.. image:: images/nvidia_smi.png
+.. image:: https://i.imgur.com/TvdfkFE.png
 
-.. image:: images/py3smi.png
+.. image:: https://i.imgur.com/UPSHr8k.png
 
 For py3smi, you can specify an update period so it will refresh the feed every
 few seconds. I.e., similar to :code:`watch -n5 nvidia-smi`, you can run
