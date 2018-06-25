@@ -79,7 +79,11 @@ def enabled_str(x):
 def get_num_from_str(s):
     # This regular expression matches numbers at the start of strings
     num_re = re.compile(r'^-?[\d.]+')
-    return int(float(num_re.match(s).group()) + 0.5)
+    try:
+        num = int(float(num_re.match(s).group()) + 0.5)
+    except:
+        num = 0
+    return num
 
 
 def print_gpu_info(gpu_info):
