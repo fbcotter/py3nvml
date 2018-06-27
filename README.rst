@@ -123,7 +123,7 @@ You can also get the full output (very similar to nvidia-smi) by running `py3smi
 
 Regular Usage 
 '''''''''''''
-For info on the functions available, visit `NVML reference`__ for a list of the
+Visit `NVML reference`__ for a list of the
 functions available and their help. Also the script py3smi is a bit hacky but
 shows examples of me querying the GPUs for info. 
 
@@ -212,15 +212,15 @@ Each function's use is the same with the following exceptions:
   .. code:: python
 
     info = nvmlDeviceGetMemoryInfo(handle)
-    print("Total memory: {}".format(info.total))
+    print("Total memory: {}MiB".format(info.total >> 20))
     # will print:
-    #   Total memory: 5636292608
-    print("Free memory: {}".format(info.free))
+    #   Total memory: 5375MiB
+    print("Free memory: {}".format(info.free >> 20))
     # will print:
-    #   Free memory: 5578420224
-    print("Used memory: ".format(info.used))
+    #   Free memory: 5319MiB
+    print("Used memory: ".format(info.used >> 20))
     # will print:
-    #   Used memory: 57872384
+    #   Used memory: 55MiB
 
 - Python handles string buffer creation.  E.g. the C function:
 
@@ -236,7 +236,6 @@ Each function's use is the same with the following exceptions:
     version = nvmlSystemGetDriverVersion()
     nvmlShutdown()
 
-For usage information see the NVML documentation.
 
 Variables
 ~~~~~~~~~
