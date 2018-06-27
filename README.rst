@@ -101,9 +101,12 @@ This function has no return codes but may raise some warnings/exceptions:
 py3smi
 ~~~~~~
 I found the default `nvidia-smi` output was missing some useful info, so made use of the
-`py3nvml/nvidia_smi.py` module to query the device and return XML info on the
+`py3nvml/nvidia_smi.py` module to query the device and get info on the
 GPUs, and then defined my own printout. I have included this as a script in
-`scripts/py3smi`. Running pip install will now put this script in your python's
+`scripts/py3smi`. The print code is horribly messy but the query code is very
+simple and should be understandable. 
+
+Running pip install will now put this script in your python's
 bin, and you'll be able to run it from the command line. Here is a comparison of
 the two outputs:
 
@@ -115,8 +118,17 @@ For py3smi, you can specify an update period so it will refresh the feed every
 few seconds. I.e., similar to :code:`watch -n5 nvidia-smi`, you can run
 :code:`py3smi -l 5`.
 
+You can also get the full output (very similar to nvidia-smi) by running `py3smi
+-f` (this shows a slightly modified process info pane below).
+
 Regular Usage 
 '''''''''''''
+For info on the functions available, visit `NVML reference`__ for a list of the
+functions available and their help. Also the script py3smi is a bit hacky but
+shows examples of me querying the GPUs for info. 
+
+__ https://docs.nvidia.com/deploy/nvml-api/index.html
+
 (below here is everything ported from pynvml)
 
 .. code:: python
