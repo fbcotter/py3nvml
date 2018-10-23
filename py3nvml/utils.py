@@ -66,8 +66,8 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95):
     try:
         py3nvml.nvmlInit()
     except:
-        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly.
-                  Proceeding on cpu only..."""
+        str_ = """ Couldn't connect to nvml drivers. Check they are installed correctly.
+Proceeding on cpu only..."""
         warnings.warn(str_, RuntimeWarning)
         logger.warn(str_)
         return 0
@@ -166,11 +166,10 @@ def get_free_gpus():
     try:
         py3nvml.nvmlInit()
     except:
-        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly.
-                  Proceeding on cpu only..."""
+        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly."""
         warnings.warn(str_, RuntimeWarning)
         logger.warn(str_)
-        return 0
+        return []
 
     numDevices = py3nvml.nvmlDeviceGetCount()
     gpu_free = [False]*numDevices

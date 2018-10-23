@@ -1,6 +1,5 @@
 py3nvml
 =======
-
 Python 3 compatible bindings to the NVIDIA Management Library. Can be used to
 query the state of the GPUs on your system. This was ported from the NVIDIA
 provided python bindings `nvidia-ml-py`__, which only 
