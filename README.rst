@@ -1,11 +1,14 @@
 py3nvml
 =======
+Documentation also available at `readthedocs`__.
+
 Python 3 compatible bindings to the NVIDIA Management Library. Can be used to
 query the state of the GPUs on your system. This was ported from the NVIDIA
 provided python bindings `nvidia-ml-py`__, which only 
 supported python 2. I have forked from version 7.352.0. The old library was 
 itself a wrapper around the `NVIDIA Management Library`__.
 
+__ https://py3nvml.readthedocs.io/en/latest/
 __ https://pypi.python.org/pypi/nvidia-ml-py/7.352.0
 __ http://developer.nvidia.com/nvidia-management-library-nvml
 
