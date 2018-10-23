@@ -6,7 +6,7 @@ import numpy as np
 from time import sleep
 from py3nvml.py3nvml import *
 import pytest
-from py3nvml.utils import grab_gpus
+from py3nvml.utils import grab_gpus, get_free_gpus
 import os
 
 
@@ -41,3 +41,6 @@ def test_grabgpus4():
     assert '0' not in os.environ['CUDA_VISIBLE_DEVICES']
     assert '1' not in os.environ['CUDA_VISIBLE_DEVICES']
     assert '2' not in os.environ['CUDA_VISIBLE_DEVICES']
+
+def test_get_free_gpus():
+    pass

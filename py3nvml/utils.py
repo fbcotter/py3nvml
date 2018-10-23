@@ -159,7 +159,8 @@ def try_get_info(f, h, default='N/A'):
 
 
 def get_free_gpus():
-    """ Returns the number of gpus with no process running on them """
+    """ For an N gpu system, returns a list of N boolean values. The nth value
+    will be True if no process was running on the nth gpu."""
     # Try connect with NVIDIA drivers
     logger = logging.getLogger(__name__)
     try:

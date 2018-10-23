@@ -42,28 +42,27 @@ Or, download and pip install::
 
 .. _utils-label:
 
-Package Description
--------------------
-
 Utils 
-'''''
+-----
 (Added by me - not ported from NVIDIA library)
 
 grab_gpus
 ~~~~~~~~~
 
-You can call the :code:`grab_gpus(num_gpus, gpu_select)` function to check the
-available gpus and set the `CUDA_VISIBLE_DEVICES` environment variable as need
-be. It determines if a GPU is available by checking if the memory-usage is 0%. 
+You can call the :code:`grab_gpus(num_gpus, gpu_select, gpu_fraction=.95)` function to check the available gpus and set
+the `CUDA_VISIBLE_DEVICES` environment variable as need be. It determines if a GPU is available by checking if the
+amount of free memory is below memory-usage is above/equal to the gpu_fraction value. The default of .95 allows for some
+small amount of memory to be taken before it deems the gpu as being 'used'. 
 
-I have found this useful as I have a shared gpu server and like to use
-tensorflow which is very greedy and calls to :code:`tf.Session()` grabs all available gpus.
+I have found this useful as I have a shared gpu server and like to use tensorflow which is very greedy and calls to
+:code:`tf.Session()` grabs all available gpus.
 
 E.g.
 
 .. code:: python
 
     import py3nvml
+    import tensorflow as tf
     py3nvml.grab_gpus(3)
     sess = tf.Session() # now we only grab 3 gpus!
 
@@ -71,22 +70,19 @@ Or the following will grab 2 gpus from the first 4 (and leave any higher gpus un
 
 .. code:: python
     
-    import py3nvml
     py3nvml.grab_gpus(num_gpus=2, gpu_select=[0,1,2,3])
     sess = tf.Session() 
 
-This will look for 3 available gpus in the range of gpus from 0 to 3. The range
-option is not necessary, and it only serves to restrict the search space for
-the grab_gpus. 
+This will look for 3 available gpus in the range of gpus from 0 to 3. The range option is not necessary, and it only
+serves to restrict the search space for the grab_gpus. 
 
-You can adjust the memory threshold for determining if a GPU is free/used with
-the :code:`gpu_fraction` parameter (default is 1):
+You can adjust the memory threshold for determining if a GPU is free/used with the :code:`gpu_fraction` parameter
+(default is 1):
 
 .. code:: python
     
-    import py3nvml
-    # Will allocate a GPU if less than 10% of its memory is being used
-    py3nvml.grab_gpus(num_gpus=2, gpu_fraction=0.9)
+    # Will allocate a GPU if less than 20% of its memory is being used
+    py3nvml.grab_gpus(num_gpus=2, gpu_fraction=0.8)
     sess = tf.Session() 
 
 This function has no return codes but may raise some warnings/exceptions:
@@ -97,6 +93,19 @@ This function has no return codes but may raise some warnings/exceptions:
   raise a ValueError. 
 - If it could connect to the GPUs but not enough were available (i.e. more than
   1 was requested), it will take everything it can and raise a RuntimeWarning.
+
+get_free_gpus
+~~~~~~~~~~~~~
+This tool can query the gpu status. Unlike the default for `grab_gpus`, which checks the memory usage of a gpu, this
+function checks if a process is running on a gpu. For a system with N gpus, returns a list of N booleans, where the nth
+value is True if no process was found running on gpu n. An example use is:
+
+.. code:: python
+    
+    import py3nvml
+    free_gpus = py3nvml.get_free_gpus()
+    if True not in free_gpus:
+        print('No free gpus found')
 
 py3smi
 ~~~~~~
@@ -122,7 +131,7 @@ You can also get the full output (very similar to nvidia-smi) by running `py3smi
 -f` (this shows a slightly modified process info pane below).
 
 Regular Usage 
-'''''''''''''
+-------------
 Visit `NVML reference`__ for a list of the
 functions available and their help. Also the script py3smi is a bit hacky but
 shows examples of me querying the GPUs for info. 
@@ -160,15 +169,13 @@ With
     import py3nvml.nvidia_smi as smi
     print(smi.XmlDeviceQuery())
 
-
-Function description
-''''''''''''''''''''
-As stated above, the pynvml library consists of python methods which wrap 
+Differences from NVML
+~~~~~~~~~~~~~~~~~~~~~
+The py3nvml library consists of python methods which wrap 
 several NVML functions, implemented in a C shared library.
 Each function's use is the same with the following exceptions:
 
-- Instead of returning error codes, failing error codes are raised as 
-  Python exceptions. E.g. They could be wrapped with exception handlers.
+1. Instead of returning error codes, failing error codes are raised as Python exceptions. I.e. They should be wrapped with exception handlers.
 
   .. code:: python
 
@@ -178,8 +185,7 @@ Each function's use is the same with the following exceptions:
         print(error)
 
 
-- C function output parameters are returned from the corresponding
-  Python function left to right. Eg the C function:
+2. C function output parameters are returned from the corresponding Python function as tuples, rather than requiring pointers. Eg the C function:
     
   .. code:: c
 
@@ -187,7 +193,7 @@ Each function's use is the same with the following exceptions:
                                       nvmlEnableState_t *current,
                                       nvmlEnableState_t *pending);
 
-  Can be called like so:
+  Becomes
 
   .. code:: python
 
@@ -195,7 +201,7 @@ Each function's use is the same with the following exceptions:
     handle = nvmlDeviceGetHandleByIndex(0)
     (current, pending) = nvmlDeviceGetEccMode(handle)
 
-- C structs are converted into Python classes. E.g. the C struct:
+3. C structs are converted into Python classes. E.g. the C struct:
 
   .. code:: c
 
@@ -222,7 +228,7 @@ Each function's use is the same with the following exceptions:
     # will print:
     #   Used memory: 55MiB
 
-- Python handles string buffer creation.  E.g. the C function:
+4. Python handles string buffer creation.  E.g. the C function:
 
   .. code:: c
 
@@ -237,9 +243,8 @@ Each function's use is the same with the following exceptions:
     nvmlShutdown()
 
 
-Variables
-~~~~~~~~~
-All meaningful NVML constants and enums are exposed in Python.
+5.  All meaningful NVML constants and enums are exposed in Python. E.g. the constant `NVML_TEMPERATURE_GPU` is available under
+`py3nvml.NVML_TEMPERATURE_GPU` 
 
 The `NVML_VALUE_NOT_AVAILABLE` constant is not used.  Instead None is mapped to the field.
 
