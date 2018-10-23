@@ -7,7 +7,7 @@ import warnings
 from py3nvml import py3nvml
 
 
-def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
+def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95):
     """
     Checks for gpu availability and sets CUDA_VISIBLE_DEVICES as such.
 
@@ -148,3 +148,41 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=1.0):
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
             return sum(gpu_free)
+
+
+def try_get_info(f, h, default='N/A'):
+    try:
+        v = f(h)
+    except py3nvml.NVMLError_NotSupported:
+        v = default
+    return v
+
+
+def get_free_gpus():
+    """ Returns the number of gpus with no process running on them """
+    # Try connect with NVIDIA drivers
+    logger = logging.getLogger(__name__)
+    try:
+        py3nvml.nvmlInit()
+    except:
+        str_ = """Couldn't connect to nvml drivers. Check they are installed correctly.
+                  Proceeding on cpu only..."""
+        warnings.warn(str_, RuntimeWarning)
+        logger.warn(str_)
+        return 0
+
+    numDevices = py3nvml.nvmlDeviceGetCount()
+    gpu_free = [False]*numDevices
+    num_gpus = py3nvml.nvmlDeviceGetCount()
+    for i in range(num_gpus):
+        try:
+            h = py3nvml.nvmlDeviceGetHandleByIndex(i)
+        except:
+            continue
+
+        procs = try_get_info(py3nvml.nvmlDeviceGetComputeRunningProcesses, h,
+                             ['something'])
+        if len(procs) == 0:
+            gpu_free[i] = True
+
+    return gpu_free
