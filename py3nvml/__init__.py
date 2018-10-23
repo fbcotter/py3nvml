@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from py3nvml import py3nvml
 from py3nvml import nvidia_smi
 from py3nvml.utils import grab_gpus

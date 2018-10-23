@@ -381,7 +381,10 @@ c_nvmlUnit_t = POINTER(struct_c_nvmlUnit_t)
 # Convert bytes objects to strings or leave untouched
 def bytes_to_str(s):
     if type(s) is bytes:
-        return str(s, 'utf-8')
+        try:
+            return str(s, 'utf-8')
+        except TypeError:  # Can get this if running python 2
+            return str(s)
     else:
         return s
 
