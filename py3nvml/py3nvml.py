@@ -30,16 +30,22 @@
 # Python bindings for the NVML library
 ##
 from ctypes import *    # noqa
+from ctypes import c_uint
 import sys
 import os
 import threading
 import string
+from enum import Enum
 
 # C Type mappings #
 # Enums
 _nvmlEnableState_t = c_uint
 NVML_FEATURE_DISABLED = 0
 NVML_FEATURE_ENABLED = 1
+class nvmlEnableState_t(Enum):
+    NVML_FEATURE_DISABLED = 0
+    NVML_FEATURE_ENABLED = 1
+
 
 _nvmlBrandType_t = c_uint
 NVML_BRAND_UNKNOWN = 0
@@ -48,31 +54,93 @@ NVML_BRAND_TESLA = 2
 NVML_BRAND_NVS = 3
 NVML_BRAND_GRID = 4
 NVML_BRAND_GEFORCE = 5
-NVML_BRAND_COUNT = 6
+NVML_BRAND_TITAN = 6
+NVML_BRAND_COUNT = 7
+class nvmlBrandType_t(Enum):
+    NVML_BRAND_UNKNOWN = 0
+    NVML_BRAND_QUADRO = 1
+    NVML_BRAND_TESLA = 2
+    NVML_BRAND_NVS = 3
+    NVML_BRAND_GRID = 4
+    NVML_BRAND_GEFORCE = 5
+    NVML_BRAND_TITAN = 6
+    NVML_BRAND_COUNT = 7
+
 
 _nvmlTemperatureThresholds_t = c_uint
 NVML_TEMPERATURE_THRESHOLD_SHUTDOWN = 0
 NVML_TEMPERATURE_THRESHOLD_SLOWDOWN = 1
-NVML_TEMPERATURE_THRESHOLD_COUNT = 1
+NVML_TEMPERATURE_THRESHOLD_MEM_MAX = 2
+NVML_TEMPERATURE_THRESHOLD_GPU_MAX = 3
+NVML_TEMPERATURE_THRESHOLD_COUNT = 4
+class nvmlTemperatureThresholds_t(Enum):
+    """
+    // Temperature at which the GPU will shut down for HW protection
+    NVML_TEMPERATURE_THRESHOLD_SHUTDOWN = 0,
+    // Temperature at which the GPU will begin HW slowdown
+    NVML_TEMPERATURE_THRESHOLD_SLOWDOWN = 1,
+    // Memory Temperature at which the GPU will begin SW slowdown
+    NVML_TEMPERATURE_THRESHOLD_MEM_MAX  = 2,
+    // GPU Temperature at which the GPU can be throttled below base clock
+    NVML_TEMPERATURE_THRESHOLD_GPU_MAX  = 3,
+    """
+    NVML_TEMPERATURE_THRESHOLD_SHUTDOWN = 0
+    NVML_TEMPERATURE_THRESHOLD_SLOWDOWN = 1
+    NVML_TEMPERATURE_THRESHOLD_MEM_MAX = 2
+    NVML_TEMPERATURE_THRESHOLD_GPU_MAX = 3
+    NVML_TEMPERATURE_THRESHOLD_COUNT = 4
+
 
 _nvmlTemperatureSensors_t = c_uint
 NVML_TEMPERATURE_GPU = 0
 NVML_TEMPERATURE_COUNT = 1
+class nvmlTemperatureSensors_t(Enum):
+    """
+    NVML_TEMPERATURE_GPU      = 0,    //!< Temperature sensor for the GPU die
+    """
+    NVML_TEMPERATURE_GPU = 0
+    NVML_TEMPERATURE_COUNT = 1
 
 _nvmlComputeMode_t = c_uint
+# !< Default compute mode -- multiple contexts per device
+# !< Support Removed
+# !< Compute-prohibited mode -- no contexts per device
+# !< Compute-exclusive-process mode -- only one context per device, usable from multiple threads at a time
 NVML_COMPUTEMODE_DEFAULT = 0
 NVML_COMPUTEMODE_EXCLUSIVE_THREAD = 1
 NVML_COMPUTEMODE_PROHIBITED = 2
 NVML_COMPUTEMODE_EXCLUSIVE_PROCESS = 3
 NVML_COMPUTEMODE_COUNT = 4
+class nvmlComputeMode_t(Enum):
+    NVML_COMPUTEMODE_DEFAULT = 0
+    NVML_COMPUTEMODE_EXCLUSIVE_THREAD = 1
+    NVML_COMPUTEMODE_PROHIBITED = 2
+    NVML_COMPUTEMODE_EXCLUSIVE_PROCESS = 3
+    NVML_COMPUTEMODE_COUNT = 4
 
 _nvmlMemoryLocation_t = c_uint
 NVML_MEMORY_LOCATION_L1_CACHE = 0
 NVML_MEMORY_LOCATION_L2_CACHE = 1
+NVML_MEMORY_LOCATION_DRAM = 2
 NVML_MEMORY_LOCATION_DEVICE_MEMORY = 2
 NVML_MEMORY_LOCATION_REGISTER_FILE = 3
 NVML_MEMORY_LOCATION_TEXTURE_MEMORY = 4
-NVML_MEMORY_LOCATION_COUNT = 5
+NVML_MEMORY_LOCATION_TEXTURE_SHM = 5
+NVML_MEMORY_LOCATION_CBU = 6
+NVML_MEMORY_LOCATION_SRAM = 7
+NVML_MEMORY_LOCATION_COUNT = 8
+class nvmlMemoryLocation_t(Enum):
+    NVML_MEMORY_LOCATION_L1_CACHE = 0
+    NVML_MEMORY_LOCATION_L2_CACHE = 1
+    NVML_MEMORY_LOCATION_DRAM = 2
+    NVML_MEMORY_LOCATION_DEVICE_MEMORY = 2
+    NVML_MEMORY_LOCATION_REGISTER_FILE = 3
+    NVML_MEMORY_LOCATION_TEXTURE_MEMORY = 4
+    NVML_MEMORY_LOCATION_TEXTURE_SHM = 5
+    NVML_MEMORY_LOCATION_CBU = 6
+    NVML_MEMORY_LOCATION_SRAM = 7
+    NVML_MEMORY_LOCATION_COUNT = 8
+
 
 # These are deprecated, instead use _nvmlMemoryErrorType_t
 _nvmlEccBitType_t = c_uint
@@ -84,21 +152,72 @@ _nvmlEccCounterType_t = c_uint
 NVML_VOLATILE_ECC = 0
 NVML_AGGREGATE_ECC = 1
 NVML_ECC_COUNTER_TYPE_COUNT = 2
+class nvmlEccCounterType_t(Enum):
+    """
+    // Volatile counts are reset each time the driver loads.
+    NVML_VOLATILE_ECC      = 0,
+    // Aggregate counts persist across reboots (i.e. for the lifetime of the
+    // device)
+    NVML_AGGREGATE_ECC     = 1,
+    """
+    NVML_VOLATILE_ECC = 0
+    NVML_AGGREGATE_ECC = 1
+    NVML_ECC_COUNTER_TYPE_COUNT = 2
+
 
 _nvmlMemoryErrorType_t = c_uint
 NVML_MEMORY_ERROR_TYPE_CORRECTED = 0
 NVML_MEMORY_ERROR_TYPE_UNCORRECTED = 1
 NVML_MEMORY_ERROR_TYPE_COUNT = 2
+class nvmlMemoryErrorType_t(Enum):
+    """
+    /**
+     * A memory error that was corrected
+     *
+     * For ECC errors, these are single bit errors
+     * For Texture memory, these are errors fixed by resend
+     */
+    NVML_MEMORY_ERROR_TYPE_CORRECTED = 0,
+    /**
+     * A memory error that was not corrected
+     *
+     * For ECC errors, these are double bit errors
+     * For Texture memory, these are errors where the resend fails
+     */
+    NVML_MEMORY_ERROR_TYPE_UNCORRECTED = 1,
+    """
+    NVML_MEMORY_ERROR_TYPE_CORRECTED = 0
+    NVML_MEMORY_ERROR_TYPE_UNCORRECTED = 1
+    NVML_MEMORY_ERROR_TYPE_COUNT = 2
+
 
 _nvmlClockType_t = c_uint
 NVML_CLOCK_GRAPHICS = 0
 NVML_CLOCK_SM = 1
 NVML_CLOCK_MEM = 2
-NVML_CLOCK_COUNT = 3
+NVML_CLOCK_VIDEO = 3
+NVML_CLOCK_COUNT = 4
+class nvmlClockType_t(Enum):
+    NVML_CLOCK_GRAPHICS = 0
+    NVML_CLOCK_SM = 1
+    NVML_CLOCK_MEM = 2
+    NVML_CLOCK_VIDEO = 3
+    NVML_CLOCK_COUNT = 4
+
 
 _nvmlDriverModel_t = c_uint
 NVML_DRIVER_WDDM = 0
 NVML_DRIVER_WDM = 1
+class nvmlDriverModel_t(Enum):
+    """
+    // WDDM driver model -- GPU treated as a display device
+    NVML_DRIVER_WDDM      = 0,
+    // WDM (TCC) model (recommended) -- GPU treated as a generic device
+    NVML_DRIVER_WDM       = 1
+    """
+    NVML_DRIVER_WDDM = 0
+    NVML_DRIVER_WDM = 1
+
 
 _nvmlPstates_t = c_uint
 NVML_PSTATE_0 = 0
@@ -118,12 +237,47 @@ NVML_PSTATE_13 = 13
 NVML_PSTATE_14 = 14
 NVML_PSTATE_15 = 15
 NVML_PSTATE_UNKNOWN = 32
+class nvmlPstates_t(Enum):
+    """
+    Performance State 0 is maximum performance and 15 is minimum performance
+    """
+    NVML_PSTATE_0 = 0
+    NVML_PSTATE_1 = 1
+    NVML_PSTATE_2 = 2
+    NVML_PSTATE_3 = 3
+    NVML_PSTATE_4 = 4
+    NVML_PSTATE_5 = 5
+    NVML_PSTATE_6 = 6
+    NVML_PSTATE_7 = 7
+    NVML_PSTATE_8 = 8
+    NVML_PSTATE_9 = 9
+    NVML_PSTATE_10 = 10
+    NVML_PSTATE_11 = 11
+    NVML_PSTATE_12 = 12
+    NVML_PSTATE_13 = 13
+    NVML_PSTATE_14 = 14
+    NVML_PSTATE_15 = 15
+    NVML_PSTATE_UNKNOWN = 32
+
 
 _nvmlInforomObject_t = c_uint
 NVML_INFOROM_OEM = 0
 NVML_INFOROM_ECC = 1
 NVML_INFOROM_POWER = 2
 NVML_INFOROM_COUNT = 3
+class nvmlInforomObject_t(Enum):
+    """
+    // An object defined by OEM
+    NVML_INFOROM_OEM            = 0,
+    // The ECC object determining the level of ECC support
+    NVML_INFOROM_ECC            = 1,
+    // The power management object
+    NVML_INFOROM_POWER          = 2,
+    """
+    NVML_INFOROM_OEM = 0
+    NVML_INFOROM_ECC = 1
+    NVML_INFOROM_POWER = 2
+    NVML_INFOROM_COUNT = 3
 
 _nvmlReturn_t = c_uint
 NVML_SUCCESS = 0
@@ -145,47 +299,232 @@ NVML_ERROR_GPU_IS_LOST = 15
 NVML_ERROR_RESET_REQUIRED = 16
 NVML_ERROR_OPERATING_SYSTEM = 17
 NVML_ERROR_LIB_RM_VERSION_MISMATCH = 18
+NVML_ERROR_IN_USE = 19
+NVML_ERROR_MEMORY = 20
+NVML_ERROR_NO_DATA = 21
+NVML_ERROR_VGPU_ECC_NOT_SUPPORTED = 22
 NVML_ERROR_UNKNOWN = 999
+
+class nvmlReturn_t(Enum):
+    """
+    // The operation was successful
+    NVML_SUCCESS = 0,
+    // NVML was not first initialized with nvmlInit()
+    NVML_ERROR_UNINITIALIZED = 1,
+    // A supplied argument is invalid
+    NVML_ERROR_INVALID_ARGUMENT = 2,
+    // The requested operation is not available on target device
+    NVML_ERROR_NOT_SUPPORTED = 3,
+    // The current user does not have permission for operation
+    NVML_ERROR_NO_PERMISSION = 4,
+    // Deprecated: Multiple initializations are now allowed through ref counting
+    NVML_ERROR_ALREADY_INITIALIZED = 5,
+    // A query to find an object was unsuccessful
+    NVML_ERROR_NOT_FOUND = 6,
+    // An input argument is not large enough
+    NVML_ERROR_INSUFFICIENT_SIZE = 7,
+    //A device's external power cables are not properly attached
+    NVML_ERROR_INSUFFICIENT_POWER = 8,
+    // NVIDIA driver is not loaded
+    NVML_ERROR_DRIVER_NOT_LOADED = 9,
+    // User provided timeout passed
+    NVML_ERROR_TIMEOUT = 10,
+    // NVIDIA Kernel detected an interrupt issue with a GPU
+    NVML_ERROR_IRQ_ISSUE = 11,
+    // NVML Shared Library couldn't be found or loaded
+    NVML_ERROR_LIBRARY_NOT_FOUND = 12,
+    // Local version of NVML doesn't implement this function
+    NVML_ERROR_FUNCTION_NOT_FOUND = 13,
+    // infoROM is corrupted
+    NVML_ERROR_CORRUPTED_INFOROM = 14,
+    // The GPU has fallen off the bus or has otherwise become inaccessible
+    NVML_ERROR_GPU_IS_LOST = 15,
+    // The GPU requires a reset before it can be used again
+    NVML_ERROR_RESET_REQUIRED = 16,
+    // The GPU control device has been blocked by the operating system/cgroups
+    NVML_ERROR_OPERATING_SYSTEM = 17,
+    // RM detects a driver/library version mismatch
+    NVML_ERROR_LIB_RM_VERSION_MISMATCH = 18,
+    // An operation cannot be performed because the GPU is currently in use
+    NVML_ERROR_IN_USE = 19,
+    // Insufficient memory
+    NVML_ERROR_MEMORY = 20,
+    // No data
+    NVML_ERROR_NO_DATA = 21,
+    // The requested vgpu operation is not available on target device, becasue
+    // ECC is enabled
+    NVML_ERROR_VGPU_ECC_NOT_SUPPORTED = 22,
+    // An internal driver error occurred
+    NVML_ERROR_UNKNOWN = 999
+    """
+    NVML_SUCCESS = 0
+    NVML_ERROR_UNINITIALIZED = 1
+    NVML_ERROR_INVALID_ARGUMENT = 2
+    NVML_ERROR_NOT_SUPPORTED = 3
+    NVML_ERROR_NO_PERMISSION = 4
+    NVML_ERROR_ALREADY_INITIALIZED = 5
+    NVML_ERROR_NOT_FOUND = 6
+    NVML_ERROR_INSUFFICIENT_SIZE = 7
+    NVML_ERROR_INSUFFICIENT_POWER = 8
+    NVML_ERROR_DRIVER_NOT_LOADED = 9
+    NVML_ERROR_TIMEOUT = 10
+    NVML_ERROR_IRQ_ISSUE = 11
+    NVML_ERROR_LIBRARY_NOT_FOUND = 12
+    NVML_ERROR_FUNCTION_NOT_FOUND = 13
+    NVML_ERROR_CORRUPTED_INFOROM = 14
+    NVML_ERROR_GPU_IS_LOST = 15
+    NVML_ERROR_RESET_REQUIRED = 16
+    NVML_ERROR_OPERATING_SYSTEM = 17
+    NVML_ERROR_LIB_RM_VERSION_MISMATCH = 18
+    NVML_ERROR_IN_USE = 19
+    NVML_ERROR_MEMORY = 20
+    NVML_ERROR_NO_DATA = 21
+    NVML_ERROR_VGPU_ECC_NOT_SUPPORTED = 22
+    NVML_ERROR_UNKNOWN = 999
+
 
 _nvmlFanState_t = c_uint
 NVML_FAN_NORMAL = 0
 NVML_FAN_FAILED = 1
+class nvmlFanState(Enum):
+    """
+    NVML_FAN_NORMAL       = 0,     //!< Fan is working properly
+    NVML_FAN_FAILED       = 1      //!< Fan has failed
+    """
+    NVML_FAN_NORMAL = 0
+    NVML_FAN_FAILED = 1
+
 
 _nvmlLedColor_t = c_uint
 NVML_LED_COLOR_GREEN = 0
 NVML_LED_COLOR_AMBER = 1
+class nvmlLedColor(Enum):
+    """
+    NVML_LED_COLOR_GREEN       = 0,     //!< GREEN, indicates good health
+    NVML_LED_COLOR_AMBER       = 1      //!< AMBER, indicates problem
+    """
+    NVML_LED_COLOR_GREEN = 0
+    NVML_LED_COLOR_AMBER = 1
+
 
 _nvmlGpuOperationMode_t = c_uint
 NVML_GOM_ALL_ON = 0
 NVML_GOM_COMPUTE = 1
 NVML_GOM_LOW_DP = 2
+class nvmlGpuOperationMode(Enum):
+    """
+    // Everything is enabled and running at full speed
+    NVML_GOM_ALL_ON = 0
+    // Designed for running only compute tasks. Graphics operations are not
+    // allowed
+    NVML_GOM_COMPUTE = 1
+    // Designed for running graphics applications that don't require
+    NVML_GOM_LOW_DP = 2
+    """
+    NVML_GOM_ALL_ON = 0
+    NVML_GOM_COMPUTE = 1
+    NVML_GOM_LOW_DP = 2
+
 
 _nvmlPageRetirementCause_t = c_uint
 NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR = 0
 NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS = 1
 NVML_PAGE_RETIREMENT_CAUSE_COUNT = 2
+class nvmlPageRetirementCause_t(Enum):
+    """
+    // Page was retired due to multiple single bit ECC error
+    NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS = 0,
+    // Page was retired due to double bit ECC error
+    NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR = 1,
+    """
+    NVML_PAGE_RETIREMENT_CAUSE_DOUBLE_BIT_ECC_ERROR = 0
+    NVML_PAGE_RETIREMENT_CAUSE_MULTIPLE_SINGLE_BIT_ECC_ERRORS = 1
+    NVML_PAGE_RETIREMENT_CAUSE_COUNT = 2
 
 _nvmlRestrictedAPI_t = c_uint
 NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS = 0
 NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS = 1
 NVML_RESTRICTED_API_COUNT = 2
+class nvmlRestrictedAPI_t(Enum):
+    """
+    // APIs that change application clocks, see
+    // nvmlDeviceSetApplicationsClocks and see
+    // nvmlDeviceResetApplicationsClocks
+    NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS = 0,
+    // APIs that enable/disable Auto Boosted clocks
+    // see nvmlDeviceSetAutoBoostedClocksEnabled
+    NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS = 1,
+    """
+    NVML_RESTRICTED_API_SET_APPLICATION_CLOCKS = 0
+    NVML_RESTRICTED_API_SET_AUTO_BOOSTED_CLOCKS = 1
+    NVML_RESTRICTED_API_COUNT = 2
 
 _nvmlBridgeChipType_t = c_uint
 NVML_BRIDGE_CHIP_PLX = 0
 NVML_BRIDGE_CHIP_BRO4 = 1
 NVML_MAX_PHYSICAL_BRIDGE = 128
+class nvmlBridgeChipType_t(Enum):
+    NVML_BRIDGE_CHIP_PLX = 0
+    NVML_BRIDGE_CHIP_BRO4 = 1
+    NVML_MAX_PHYSICAL_BRIDGE = 128
 
 _nvmlValueType_t = c_uint
 NVML_VALUE_TYPE_DOUBLE = 0
 NVML_VALUE_TYPE_UNSIGNED_INT = 1
 NVML_VALUE_TYPE_UNSIGNED_LONG = 2
 NVML_VALUE_TYPE_UNSIGNED_LONG_LONG = 3
-NVML_VALUE_TYPE_COUNT = 4
+NVML_VALUE_TYPE_SIGNED_LONG_LONG = 4
+NVML_VALUE_TYPE_COUNT = 5
+class nvmlValueType_t(Enum):
+    NVML_VALUE_TYPE_DOUBLE = 0
+    NVML_VALUE_TYPE_UNSIGNED_INT = 1
+    NVML_VALUE_TYPE_UNSIGNED_LONG = 2
+    NVML_VALUE_TYPE_UNSIGNED_LONG_LONG = 3
+    NVML_VALUE_TYPE_SIGNED_LONG_LONG = 4
+    NVML_VALUE_TYPE_COUNT = 5
 
 _nvmlPerfPolicyType_t = c_uint
 NVML_PERF_POLICY_POWER = 0
 NVML_PERF_POLICY_THERMAL = 1
-NVML_PERF_POLICY_COUNT = 2
+NVML_PERF_POLICY_SYNC_BOOST = 2
+NVML_PERF_POLICY_BOARD_LIMIT = 3
+NVML_PERF_POLICY_LOW_UTILIZATION = 4
+NVML_PERF_POLICY_RELIABILITY = 5
+NVML_PERF_POLICY_TOTAL_APP_CLOCKS = 10
+NVML_PERF_POLICY_TOTAL_BASE_CLOCKS = 11
+NVML_PERF_POLICY_COUNT = 12
+class nvmlPerfPolicyType_t(Enum):
+    """
+    // How long did power violations cause the GPU to be below application
+    // clocks
+    NVML_PERF_POLICY_POWER = 0,
+    // How long did thermal violations cause the GPU to be below application
+    // clocks
+    NVML_PERF_POLICY_THERMAL = 1,
+    // How long did sync boost cause the GPU to be below application clocks
+    NVML_PERF_POLICY_SYNC_BOOST = 2,
+    // How long did the board limit cause the GPU to be below application clocks
+    NVML_PERF_POLICY_BOARD_LIMIT = 3,
+    // How long did low utilization cause the GPU to be below application clocks
+    NVML_PERF_POLICY_LOW_UTILIZATION = 4,
+    // How long did the board reliability limit cause the GPU to be below
+    // application clocks
+    NVML_PERF_POLICY_RELIABILITY = 5,
+    // Total time the GPU was held below application clocks by any limiter
+    // (0 - 5 above)
+    NVML_PERF_POLICY_TOTAL_APP_CLOCKS = 10,
+    // Total time the GPU was held below base clocks
+    NVML_PERF_POLICY_TOTAL_BASE_CLOCKS = 11,
+    """
+    NVML_PERF_POLICY_POWER = 0
+    NVML_PERF_POLICY_THERMAL = 1
+    NVML_PERF_POLICY_SYNC_BOOST = 2
+    NVML_PERF_POLICY_BOARD_LIMIT = 3
+    NVML_PERF_POLICY_LOW_UTILIZATION = 4
+    NVML_PERF_POLICY_RELIABILITY = 5
+    NVML_PERF_POLICY_TOTAL_APP_CLOCKS = 10
+    NVML_PERF_POLICY_TOTAL_BASE_CLOCKS = 11
+    NVML_PERF_POLICY_COUNT = 12
 
 _nvmlSamplingType_t = c_uint
 NVML_TOTAL_POWER_SAMPLES = 0
@@ -196,11 +535,46 @@ NVML_DEC_UTILIZATION_SAMPLES = 4
 NVML_PROCESSOR_CLK_SAMPLES = 5
 NVML_MEMORY_CLK_SAMPLES = 6
 NVML_SAMPLINGTYPE_COUNT = 7
+class nvmlSamplingType_t(Enum):
+    """
+    // To represent total power drawn by GPU
+    NVML_TOTAL_POWER_SAMPLES        = 0,
+    // To represent percent of time during which one or more kernels was
+    // executing on the GPU
+    NVML_GPU_UTILIZATION_SAMPLES    = 1,
+    // To represent percent of time during which global (device) memory was
+    // being read or written
+    NVML_MEMORY_UTILIZATION_SAMPLES = 2,
+    // To represent percent of time during which NVENC remains busy
+    NVML_ENC_UTILIZATION_SAMPLES    = 3,
+    // To represent percent of time during which NVDEC remains busy
+    NVML_DEC_UTILIZATION_SAMPLES    = 4,
+    // To represent processor clock samples
+    NVML_PROCESSOR_CLK_SAMPLES      = 5,
+    // To represent memory clock samples
+    NVML_MEMORY_CLK_SAMPLES         = 6,
+    """
+    NVML_TOTAL_POWER_SAMPLES = 0
+    NVML_GPU_UTILIZATION_SAMPLES = 1
+    NVML_MEMORY_UTILIZATION_SAMPLES = 2
+    NVML_ENC_UTILIZATION_SAMPLES = 3
+    NVML_DEC_UTILIZATION_SAMPLES = 4
+    NVML_PROCESSOR_CLK_SAMPLES = 5
+    NVML_MEMORY_CLK_SAMPLES = 6
+    NVML_SAMPLINGTYPE_COUNT = 7
 
 _nvmlPcieUtilCounter_t = c_uint
 NVML_PCIE_UTIL_TX_BYTES = 0
 NVML_PCIE_UTIL_RX_BYTES = 1
 NVML_PCIE_UTIL_COUNT = 2
+class nvmlPcieUtilCouter_t(Enum):
+    """
+    NVML_PCIE_UTIL_TX_BYTES             = 0, // 1KB granularity
+    NVML_PCIE_UTIL_RX_BYTES             = 1, // 1KB granularity
+    """
+    NVML_PCIE_UTIL_TX_BYTES = 0
+    NVML_PCIE_UTIL_RX_BYTES = 1
+    NVML_PCIE_UTIL_COUNT = 2
 
 _nvmlGpuTopologyLevel_t = c_uint
 NVML_TOPOLOGY_INTERNAL = 0
@@ -209,6 +583,29 @@ NVML_TOPOLOGY_MULTIPLE = 20
 NVML_TOPOLOGY_HOSTBRIDGE = 30
 NVML_TOPOLOGY_CPU = 40
 NVML_TOPOLOGY_SYSTEM = 50
+class nvmlGpuTopologyLevel_t(Enum):
+    """
+    // e.g. Tesla K80
+    NVML_TOPOLOGY_INTERNAL           = 0,
+    // all devices that only need traverse a single PCIe switch
+    NVML_TOPOLOGY_SINGLE             = 10,
+    // all devices that need not traverse a host bridge
+    NVML_TOPOLOGY_MULTIPLE           = 20,
+    // all devices that are connected to the same host bridge
+    NVML_TOPOLOGY_HOSTBRIDGE         = 30,
+    // all devices that are connected to the same NUMA node but possibly
+    // multiple host bridges
+    NVML_TOPOLOGY_NODE               = 40,
+    // all devices in the system
+    NVML_TOPOLOGY_SYSTEM             = 50,
+    """
+    NVML_TOPOLOGY_INTERNAL = 0
+    NVML_TOPOLOGY_SINGLE = 10
+    NVML_TOPOLOGY_MULTIPLE = 20
+    NVML_TOPOLOGY_HOSTBRIDGE = 30
+    NVML_TOPOLOGY_CPU = 40
+    NVML_TOPOLOGY_SYSTEM = 50
+
 
 # C preprocessor defined values
 nvmlFlagDefault = 0
@@ -257,13 +654,17 @@ class NVMLError(Exception):
         NVML_ERROR_RESET_REQUIRED:      "GPU requires restart",
         NVML_ERROR_OPERATING_SYSTEM:    "The operating system has blocked the request.",
         NVML_ERROR_LIB_RM_VERSION_MISMATCH: "RM has detected an NVML/RM version mismatch.",
+        NVML_ERROR_IN_USE:              "The GPU is currently in use",
+        NVML_ERROR_MEMORY:              "Insufficient Memory",
+        NVML_ERROR_NO_DATA:             "No data",
+        NVML_ERROR_VGPU_ECC_NOT_SUPPORTED: "Requested vgpu operation not available with ECC enabled",
         NVML_ERROR_UNKNOWN:             "Unknown Error",
         }
     def __new__(typ, value):
-        '''
+        """
         Maps value to a proper subclass of NVMLError.
         See _extractNVMLErrorsAsClasses function for more details
-        '''
+        """
         if typ == NVMLError:
             typ = NVMLError._valClassMapping.get(value, typ)
         obj = Exception.__new__(typ)
@@ -283,15 +684,16 @@ class NVMLError(Exception):
 
 
 def _extractNVMLErrorsAsClasses():
-    '''
+    """
     Generates a hierarchy of classes on top of NVMLError class.
 
-    Each NVML Error gets a new NVMLError subclass. This way try,except blocks can filter appropriate
-    exceptions more easily.
+    Each NVML Error gets a new NVMLError subclass. This way try,except blocks
+    can filter appropriate exceptions more easily.
 
-    NVMLError is a parent class. Each NVML_ERROR_* gets it's own subclass.
-    e.g. NVML_ERROR_ALREADY_INITIALIZED will be turned into NVMLError_AlreadyInitialized
-    '''
+    NVMLError is a parent class. Each NVML_ERROR_* gets it's own subclass.  e.g.
+    NVML_ERROR_ALREADY_INITIALIZED will be turned into
+    NVMLError_AlreadyInitialized
+    """
     this_module = sys.modules[__name__]
     nvmlErrorsNames = [x for x in dir(this_module) if x.startswith("NVML_ERROR_")]
     for err_name in nvmlErrorsNames:
@@ -318,8 +720,9 @@ def _nvmlCheckReturn(ret):
     return ret
 
 
-# Function access #
-_nvmlGetFunctionPointer_cache = dict() # function pointers are cached to prevent unnecessary libLoadLock locking
+# Function access
+# function pointers are cached to prevent unnecessary libLoadLock locking
+_nvmlGetFunctionPointer_cache = dict()
 def _nvmlGetFunctionPointer(name):
     global nvmlLib
 
@@ -329,7 +732,7 @@ def _nvmlGetFunctionPointer(name):
     libLoadLock.acquire()
     try:
         # ensure library was loaded
-        if (nvmlLib == None):
+        if (nvmlLib is None):
             raise NVMLError(NVML_ERROR_UNINITIALIZED)
         try:
             _nvmlGetFunctionPointer_cache[name] = getattr(nvmlLib, name)
@@ -349,6 +752,7 @@ class nvmlFriendlyObject(object):
     def __init__(self, dictionary):
         for x in dictionary:
             setattr(self, x, dictionary[x])
+
     def __str__(self):
         return self.__dict__.__str__()
 
@@ -374,7 +778,7 @@ def nvmlFriendlyObjectToStruct(obj, model):
 
 # Unit structures
 class struct_c_nvmlUnit_t(Structure):
-    pass # opaque handle
+    pass  # opaque handle
 c_nvmlUnit_t = POINTER(struct_c_nvmlUnit_t)
 
 
@@ -663,21 +1067,23 @@ def nvmlInit():
     libLoadLock.acquire()
     _nvmlLib_refcount += 1
     libLoadLock.release()
-    return None
+    global nvmlLib
+    return nvmlLib
+
 
 def _LoadNvmlLibrary():
-    '''
+    """
     Load the library if it isn't loaded already
-    '''
+    """
     global nvmlLib
 
-    if (nvmlLib == None):
+    if (nvmlLib is None):
         # lock to ensure only one caller loads the library
         libLoadLock.acquire()
 
         try:
             # ensure the library still isn't loaded
-            if (nvmlLib == None):
+            if (nvmlLib is None):
                 try:
                     if (sys.platform[:3] == "win"):
                         # cdecl calling convention
@@ -693,6 +1099,7 @@ def _LoadNvmlLibrary():
         finally:
             # lock is always freed
             libLoadLock.release()
+
 
 def nvmlShutdown():
     #
@@ -767,6 +1174,21 @@ def nvmlSystemGetHicVersion():
 
 ## Unit get functions
 def nvmlUnitGetCount():
+    """
+/**
+ * Retrieves the number of units in the system.
+ *
+ * For S-class products.
+ *
+ * @param unitCount                            Reference in which to return the number of units
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a unitCount has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unitCount is NULL
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_count = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetCount")
     ret = fn(byref(c_count))
@@ -774,6 +1196,27 @@ def nvmlUnitGetCount():
     return bytes_to_str(c_count.value)
 
 def nvmlUnitGetHandleByIndex(index):
+    """
+/**
+ * Acquire the handle for a particular unit, based on its index.
+ *
+ * For S-class products.
+ *
+ * Valid indices are derived from the \a unitCount returned by \ref nvmlUnitGetCount().
+ *   For example, if \a unitCount is 2 the valid indices are 0 and 1, corresponding to UNIT 0 and UNIT 1.
+ *
+ * The order in which NVML enumerates units has no guarantees of consistency between reboots.
+ *
+ * @param index                                The index of the target unit, >= 0 and < \a unitCount
+ * @param unit                                 Reference in which to return the unit handle
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a unit has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a index is invalid or \a unit is NULL
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_index = c_uint(index)
     unit = c_nvmlUnit_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetHandleByIndex")
@@ -782,6 +1225,23 @@ def nvmlUnitGetHandleByIndex(index):
     return bytes_to_str(unit)
 
 def nvmlUnitGetUnitInfo(unit):
+    """
+/**
+ * Retrieves the static information associated with a unit.
+ *
+ * For S-class products.
+ *
+ * See \ref nvmlUnitInfo_t for details on available unit info.
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param info                                 Reference in which to return the unit information
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a info has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit is invalid or \a info is NULL
+ */
+    """
     c_info = c_nvmlUnitInfo_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetUnitInfo")
     ret = fn(unit, byref(c_info))
@@ -789,6 +1249,27 @@ def nvmlUnitGetUnitInfo(unit):
     return bytes_to_str(c_info)
 
 def nvmlUnitGetLedState(unit):
+    """
+/**
+ * Retrieves the LED state associated with this unit.
+ *
+ * For S-class products.
+ *
+ * See \ref nvmlLedState_t for details on allowed states.
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param state                                Reference in which to return the current LED state
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a state has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit is invalid or \a state is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this is not an S-class product
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ *
+ * @see nvmlUnitSetLedState()
+ */
+    """
     c_state =  c_nvmlLedState_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetLedState")
     ret = fn(unit, byref(c_state))
@@ -796,6 +1277,25 @@ def nvmlUnitGetLedState(unit):
     return bytes_to_str(c_state)
 
 def nvmlUnitGetPsuInfo(unit):
+    """
+/**
+ * Retrieves the PSU stats for the unit.
+ *
+ * For S-class products.
+ *
+ * See \ref nvmlPSUInfo_t for details on available PSU info.
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param psu                                  Reference in which to return the PSU information
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a psu has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit is invalid or \a psu is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this is not an S-class product
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_info = c_nvmlPSUInfo_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetPsuInfo")
     ret = fn(unit, byref(c_info))
@@ -803,6 +1303,27 @@ def nvmlUnitGetPsuInfo(unit):
     return bytes_to_str(c_info)
 
 def nvmlUnitGetTemperature(unit, type):
+    """
+/**
+ * Retrieves the temperature readings for the unit, in degrees C.
+ *
+ * For S-class products.
+ *
+ * Depending on the product, readings may be available for intake (type=0),
+ * exhaust (type=1) and board (type=2).
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param type                                 The type of reading to take
+ * @param temp                                 Reference in which to return the intake temperature
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a temp has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit or \a type is invalid or \a temp is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this is not an S-class product
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_temp = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetTemperature")
     ret = fn(unit, c_uint(type), byref(c_temp))
@@ -810,6 +1331,25 @@ def nvmlUnitGetTemperature(unit, type):
     return bytes_to_str(c_temp.value)
 
 def nvmlUnitGetFanSpeedInfo(unit):
+    """
+/**
+ * Retrieves the fan speed readings for the unit.
+ *
+ * For S-class products.
+ *
+ * See \ref nvmlUnitFanSpeeds_t for details on available fan speed info.
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param fanSpeeds                            Reference in which to return the fan speed information
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a fanSpeeds has been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit is invalid or \a fanSpeeds is NULL
+ *         - \ref NVML_ERROR_NOT_SUPPORTED     if this is not an S-class product
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_speeds = c_nvmlUnitFanSpeeds_t()
     fn = _nvmlGetFunctionPointer("nvmlUnitGetFanSpeedInfo")
     ret = fn(unit, byref(c_speeds))
@@ -818,6 +1358,8 @@ def nvmlUnitGetFanSpeedInfo(unit):
 
 # added to API
 def nvmlUnitGetDeviceCount(unit):
+    """
+    """
     c_count = c_uint(0)
     # query the unit to determine device count
     fn = _nvmlGetFunctionPointer("nvmlUnitGetDevices")
@@ -828,6 +1370,27 @@ def nvmlUnitGetDeviceCount(unit):
     return bytes_to_str(c_count.value)
 
 def nvmlUnitGetDevices(unit):
+    """
+/**
+ * Retrieves the set of GPU devices that are attached to the specified unit.
+ *
+ * For S-class products.
+ *
+ * The \a deviceCount argument is expected to be set to the size of the input \a devices array.
+ *
+ * @param unit                                 The identifier of the target unit
+ * @param deviceCount                          Reference in which to provide the \a devices array size, and
+ *                                             to return the number of attached GPU devices
+ * @param devices                              Reference in which to return the references to the attached GPU devices
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a deviceCount and \a devices have been populated
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INSUFFICIENT_SIZE if \a deviceCount indicates that the \a devices array is too small
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a unit is invalid, either of \a deviceCount or \a devices is NULL
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_count = c_uint(nvmlUnitGetDeviceCount(unit))
     device_array = c_nvmlDevice_t * c_count.value
     c_devices = device_array()
@@ -838,6 +1401,28 @@ def nvmlUnitGetDevices(unit):
 
 ## Device get functions
 def nvmlDeviceGetCount():
+    """
+ /**
+ * Retrieves the number of compute devices in the system. A compute device is a single GPU.
+ *
+ * For all products.
+ *
+ * Note: New nvmlDeviceGetCount_v2 (default in NVML 5.319) returns count of all devices in the system
+ *       even if nvmlDeviceGetHandleByIndex_v2 returns NVML_ERROR_NO_PERMISSION for such device.
+ *       Update your code to handle this error, or use NVML 4.304 or older nvml header file.
+ *       For backward binary compatibility reasons _v1 version of the API is still present in the shared
+ *       library.
+ *       Old _v1 version of nvmlDeviceGetCount doesn't count devices that NVML has no permission to talk to.
+ *
+ * @param deviceCount                          Reference in which to return the number of accessible devices
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                 if \a deviceCount has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a deviceCount is NULL
+ *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+ */
+    """
     c_count = c_uint()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetCount_v2")
     ret = fn(byref(c_count))
@@ -845,6 +1430,54 @@ def nvmlDeviceGetCount():
     return bytes_to_str(c_count.value)
 
 def nvmlDeviceGetHandleByIndex(index):
+    """
+/**
+ * Acquire the handle for a particular device, based on its index.
+ *
+ * For all products.
+ *
+ * Valid indices are derived from the \a accessibleDevices count returned by
+ *   \ref nvmlDeviceGetCount(). For example, if \a accessibleDevices is 2 the valid indices
+ *   are 0 and 1, corresponding to GPU 0 and GPU 1.
+ *
+ * The order in which NVML enumerates devices has no guarantees of consistency between reboots. For that reason it
+ *   is recommended that devices be looked up by their PCI ids or UUID. See
+ *   \ref nvmlDeviceGetHandleByUUID() and \ref nvmlDeviceGetHandleByPciBusId().
+ *
+ * Note: The NVML index may not correlate with other APIs, such as the CUDA device index.
+ *
+ * Starting from NVML 5, this API causes NVML to initialize the target GPU
+ * NVML may initialize additional GPUs if:
+ *  - The target GPU is an SLI slave
+ *
+ * Note: New nvmlDeviceGetCount_v2 (default in NVML 5.319) returns count of all devices in the system
+ *       even if nvmlDeviceGetHandleByIndex_v2 returns NVML_ERROR_NO_PERMISSION for such device.
+ *       Update your code to handle this error, or use NVML 4.304 or older nvml header file.
+ *       For backward binary compatibility reasons _v1 version of the API is still present in the shared
+ *       library.
+ *       Old _v1 version of nvmlDeviceGetCount doesn't count devices that NVML has no permission to talk to.
+ *
+ *       This means that nvmlDeviceGetHandleByIndex_v2 and _v1 can return different devices for the same index.
+ *       If you don't touch macros that map old (_v1) versions to _v2 versions at the top of the file you don't
+ *       need to worry about that.
+ *
+ * @param index                                The index of the target GPU, >= 0 and < \a accessibleDevices
+ * @param device                               Reference in which to return the device handle
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                  if \a device has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED      if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT   if \a index is invalid or \a device is NULL
+ *         - \ref NVML_ERROR_INSUFFICIENT_POWER if any attached devices have improperly attached external power cables
+ *         - \ref NVML_ERROR_NO_PERMISSION      if the user doesn't have permission to talk to this device
+ *         - \ref NVML_ERROR_IRQ_ISSUE          if NVIDIA kernel detected an interrupt issue with the attached GPUs
+ *         - \ref NVML_ERROR_GPU_IS_LOST        if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN            on any unexpected error
+ *
+ * @see nvmlDeviceGetIndex
+ * @see nvmlDeviceGetCount
+ */
+    """
     c_index = c_uint(index)
     device = c_nvmlDevice_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByIndex_v2")
@@ -853,6 +1486,40 @@ def nvmlDeviceGetHandleByIndex(index):
     return bytes_to_str(device)
 
 def nvmlDeviceGetHandleBySerial(serial):
+    """
+/**
+ * Acquire the handle for a particular device, based on its board serial number.
+ *
+ * For Fermi &tm; or newer fully supported devices.
+ *
+ * This number corresponds to the value printed directly on the board, and to the value returned by
+ *   \ref nvmlDeviceGetSerial().
+ *
+ * @deprecated Since more than one GPU can exist on a single board this function is deprecated in favor
+ *             of \ref nvmlDeviceGetHandleByUUID.
+ *             For dual GPU boards this function will return NVML_ERROR_INVALID_ARGUMENT.
+ *
+ * Starting from NVML 5, this API causes NVML to initialize the target GPU
+ * NVML may initialize additional GPUs as it searches for the target GPU
+ *
+ * @param serial                               The board serial number of the target GPU
+ * @param device                               Reference in which to return the device handle
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                  if \a device has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED      if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT   if \a serial is invalid, \a device is NULL or more than one
+ *                                              device has the same serial (dual GPU boards)
+ *         - \ref NVML_ERROR_NOT_FOUND          if \a serial does not match a valid device on the system
+ *         - \ref NVML_ERROR_INSUFFICIENT_POWER if any attached devices have improperly attached external power cables
+ *         - \ref NVML_ERROR_IRQ_ISSUE          if NVIDIA kernel detected an interrupt issue with the attached GPUs
+ *         - \ref NVML_ERROR_GPU_IS_LOST        if any GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN            on any unexpected error
+ *
+ * @see nvmlDeviceGetSerial
+ * @see nvmlDeviceGetHandleByUUID
+ */
+    """
     c_serial = c_char_p(serial)
     device = c_nvmlDevice_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleBySerial")
@@ -861,6 +1528,31 @@ def nvmlDeviceGetHandleBySerial(serial):
     return bytes_to_str(device)
 
 def nvmlDeviceGetHandleByUUID(uuid):
+    """
+/**
+ * Acquire the handle for a particular device, based on its globally unique immutable UUID associated with each device.
+ *
+ * For all products.
+ *
+ * @param uuid                                 The UUID of the target GPU
+ * @param device                               Reference in which to return the device handle
+ *
+ * Starting from NVML 5, this API causes NVML to initialize the target GPU
+ * NVML may initialize additional GPUs as it searches for the target GPU
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                  if \a device has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED      if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT   if \a uuid is invalid or \a device is null
+ *         - \ref NVML_ERROR_NOT_FOUND          if \a uuid does not match a valid device on the system
+ *         - \ref NVML_ERROR_INSUFFICIENT_POWER if any attached devices have improperly attached external power cables
+ *         - \ref NVML_ERROR_IRQ_ISSUE          if NVIDIA kernel detected an interrupt issue with the attached GPUs
+ *         - \ref NVML_ERROR_GPU_IS_LOST        if any GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN            on any unexpected error
+ *
+ * @see nvmlDeviceGetUUID
+ */
+    """
     c_uuid = c_char_p(uuid)
     device = c_nvmlDevice_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByUUID")
@@ -869,6 +1561,36 @@ def nvmlDeviceGetHandleByUUID(uuid):
     return bytes_to_str(device)
 
 def nvmlDeviceGetHandleByPciBusId(pciBusId):
+    """
+/**
+ * Acquire the handle for a particular device, based on its PCI bus id.
+ *
+ * For all products.
+ *
+ * This value corresponds to the nvmlPciInfo_t::busId returned by \ref nvmlDeviceGetPciInfo().
+ *
+ * Starting from NVML 5, this API causes NVML to initialize the target GPU
+ * NVML may initialize additional GPUs if:
+ *  - The target GPU is an SLI slave
+ *
+ * \note NVML 4.304 and older version of nvmlDeviceGetHandleByPciBusId"_v1" returns NVML_ERROR_NOT_FOUND
+ *       instead of NVML_ERROR_NO_PERMISSION.
+ *
+ * @param pciBusId                             The PCI bus id of the target GPU
+ * @param device                               Reference in which to return the device handle
+ *
+ * @return
+ *         - \ref NVML_SUCCESS                  if \a device has been set
+ *         - \ref NVML_ERROR_UNINITIALIZED      if the library has not been successfully initialized
+ *         - \ref NVML_ERROR_INVALID_ARGUMENT   if \a pciBusId is invalid or \a device is NULL
+ *         - \ref NVML_ERROR_NOT_FOUND          if \a pciBusId does not match a valid device on the system
+ *         - \ref NVML_ERROR_INSUFFICIENT_POWER if the attached device has improperly attached external power cables
+ *         - \ref NVML_ERROR_NO_PERMISSION      if the user doesn't have permission to talk to this device
+ *         - \ref NVML_ERROR_IRQ_ISSUE          if NVIDIA kernel detected an interrupt issue with the attached GPUs
+ *         - \ref NVML_ERROR_GPU_IS_LOST        if the target GPU has fallen off the bus or is otherwise inaccessible
+ *         - \ref NVML_ERROR_UNKNOWN            on any unexpected error
+ */
+    """
     c_busId = c_char_p(pciBusId)
     device = c_nvmlDevice_t()
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetHandleByPciBusId_v2")
