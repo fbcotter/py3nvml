@@ -18,14 +18,13 @@ parser.add_argument('-l', '--loop', action='store', type=int,
                     default=0, help='Loop period')
 parser.add_argument('-f', '--full', action='store_true',
                     help='Print extended version')
-parser.add_argument('-w', '--wide', action='store_true',
-                    help='Print wide version')
+parser.add_argument('-w', '--width', type=int, default=77,
+                    help='Print width')
 
 COL1_WIDTH = 33
 COL2_WIDTH = 21
 COL3_WIDTH = 21
 WIDTH = 77
-WIDE_WIDTH = 117
 LONG_FORMAT = False
 
 gpu_format_col1 = '| {:>3} {:3} {:>5} {:>4} {:>11}|'
@@ -37,10 +36,6 @@ gpu_longformat_col13 = ' {:>19} |'
 gpu_longformat_col21 = '| {:>3} {:>4}   {:>3}     {:>11}|'
 gpu_longformat_col22 = ' {:>19} |'
 gpu_longformat_col23 = ' {:>8} {:>10} |'
-PROC_NAME_WIDTH = 27
-WIDE_PROC_NAME_WIDTH = 67
-proc_format = '| {:>3}  {:>11}  {:>5}  {:>11}  {: <27}  {:>5}{:3<} |'
-proc_format_wide = '| {:>3}  {:>11}  {:>5}  {:>11}  {: <67}  {:>5}{:3<} |'
 
 
 def print_header(driver_version, long_format=False):
@@ -73,20 +68,12 @@ def print_header(driver_version, long_format=False):
     return n
 
 
-def print_proc_header(wide=False):
-    if wide:
-        print(' '*(WIDE_WIDTH+2))
-        print('+' + '-' * WIDE_WIDTH + '+')
-        print('| Processes:' + ' '*(WIDE_WIDTH - 22) + 'GPU Memory |')
-        print(proc_format_wide.format('GPU', 'Owner', 'PID', 'Uptime', 'Process Name', '   Usage', ''))
-        print('+' + '=' * WIDE_WIDTH + '+')
-    else:
-        print(' '*(WIDTH + 2))
-        print('+' + '-' * WIDTH + '+')
-        print('| Processes:' + ' '* (WIDTH - 22) + 'GPU Memory |')
-        #  print('| Processes:                                                       GPU Memory |')
-        print(proc_format.format('GPU', 'Owner', 'PID', 'Uptime', 'Process Name','   Usage', ''))
-        print('+' + '=' * WIDTH + '+')
+def print_proc_header():
+    print(' '*(args.width+2))
+    print('+' + '-' * args.width + '+')
+    print('| Processes:' + ' '*(args.width - 22) + 'GPU Memory |')
+    print(proc_format.format('GPU', 'Owner', 'PID', 'Uptime', 'Process Name', '   Usage', ''))
+    print('+' + '=' * args.width + '+')
     return 6
 
 def enabled_str(x):
@@ -253,7 +240,7 @@ def get_uptime(pid):
     return time
 
 
-def main(full=False, wide=False):
+def main(full=False):
     num_lines = 0
     driver_version = nvmlSystemGetDriverVersion()
     header_lines = print_header(driver_version, full)
@@ -269,16 +256,7 @@ def main(full=False, wide=False):
         print('+' + '-' * COL1_WIDTH +
               '+' + '-' * COL2_WIDTH +
               '+' + '-' * COL3_WIDTH + '+')
-    proc_header_lines = print_proc_header(wide)
-
-    if wide:
-        proc_str = proc_format_wide
-        pw = WIDE_PROC_NAME_WIDTH
-        w = WIDE_WIDTH
-    else:
-        proc_str = proc_format
-        pw = PROC_NAME_WIDTH
-        w = WIDTH
+    proc_header_lines = print_proc_header()
 
     proc_lines = 0
     for i in range(num_gpus):
@@ -296,12 +274,12 @@ def main(full=False, wide=False):
             uname = get_uname_pid(p.pid)
             procname = get_pname(p.pid)
             uptime = get_uptime(p.pid)
-            print(proc_str.format(
+            print(proc_format.format(
                 min_number, uname, p.pid, uptime,
-                cut_proc_name(procname, pw),
+                cut_proc_name(procname, args.width-50),
                 p.usedGpuMemory >> 20, 'MiB'))
             proc_lines += 1
-    print('+' + '-' * w + '+')
+    print('+' + '-' * args.width + '+')
 
     #  print('header lines: {}'.format(header_lines))
     #  print('gpu lines: {}'.format(gpu_lines))
@@ -312,21 +290,18 @@ def main(full=False, wide=False):
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    proc_format = '| {:>3}  {:>11}  {:>5}  {:>11}  {: <' + str(args.width-50) + '}  {:>5}{:3<} |'
     nvmlInit()
-    if args.wide:
-        w = WIDE_WIDTH + 2
-    else:
-        w = WIDTH + 2
-    print_lines = main(args.full, args.wide)
+    print_lines = main(args.full)
 
     if args.loop > 0:
         try:
             while True:
                 sleep(args.loop)
                 sys.stdout.write("\033[F" * print_lines)
-                print_lines_new = main(args.full, args.wide)
+                print_lines_new = main(args.full)
                 if print_lines_new < print_lines:
-                    sys.stdout.write((' '*w+'\n')*(print_lines - print_lines_new))
+                    sys.stdout.write((' '*(args.width+2)+'\n')*(print_lines - print_lines_new))
                     sys.stdout.write("\033[F" * (print_lines - print_lines_new))
                 print_lines = print_lines_new
         except KeyboardInterrupt:
