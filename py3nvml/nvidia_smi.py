@@ -41,6 +41,9 @@
 
 from .py3nvml import *
 import datetime
+import warnings
+import logging
+import os
 
 #
 # Helper functions
@@ -200,6 +203,10 @@ def handleError(err):
 
 #######
 def XmlDeviceQuery():
+    logger = logging.getLogger(__name__)
+    str_ = """Warning this function is deprecated and will be removed in future releases."""
+    warnings.warn(str_, RuntimeWarning)
+    logger.warn(str_)
 
     strResult = ''
     try:
