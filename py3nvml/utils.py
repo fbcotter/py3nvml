@@ -169,9 +169,25 @@ def try_get_info(f, h, default='N/A'):
 
 def get_free_gpus(max_procs=0):
     """
-    Checks the number of GPUsprocesses running on your GPUs
-    For an N gpu system, returns a list of N boolean values. The nth value
-    will be True if no more than max_procs process was running on the nth gpu.
+    Checks the number of processes running on your GPUs.
+
+    Parameters
+    ----------
+    max_procs : int
+        Maximum number of procs allowed to run on a gpu for it to be considered
+        'available'
+
+    Returns
+    -------
+    availabilities : list(bool)
+        List of length N for an N-gpu system. The nth value will be true, if the
+        nth gpu had at most max_procs processes running on it. Set to 0 to look
+        for gpus with no procs on it.
+
+    Note
+    ----
+    If function can't query the driver will return an empty list rather than raise an
+    Exception.
     """
     # Try connect with NVIDIA drivers
     logger = logging.getLogger(__name__)
@@ -203,12 +219,19 @@ def get_free_gpus(max_procs=0):
 def get_num_procs():
     """ Gets the number of processes running on each gpu
 
-    Returns:
-        List(int): Number of processes running on each gpu
+    Returns
+    -------
+    num_procs : list(int)
+        Number of processes running on each gpu
 
-    Note:
-        If couldn't query the driver will return an empty list.
-        If couldn't get the info from the gpu will return -1 in that gpu's place
+    Note
+    ----
+    If function can't query the driver will return an empty list rather than raise an
+    Exception.
+
+    Note
+    ----
+    If function can't get the info from the gpu will return -1 in that gpu's place
     """
     # Try connect with NVIDIA drivers
     logger = logging.getLogger(__name__)
