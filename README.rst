@@ -22,6 +22,25 @@ gpu server). These are:
 
 See the Utils section below for more info.
 
+Updates in Version 0.2.3
+------------------------
+To try and keep py3nvml somewhat up-to-date with the constantly evolving nvidia
+drivers, I have done some work to the `py3nvml.py3nvml` module. In particular,
+I have updated all the constants that were missing in py3nvml and existing in the
+`NVIDIA source`__ as of version 418.43. In addition, I have wrapped all of these 
+constants in Enums so it is easier to see what constants go together. Finally,
+for all the functions in `py3nvml.py3nvml` I have copied in the
+C docstring. While this will result in some strange looking docstrings which
+will be slightly incorrect, they should give good guidance on the scope of the
+function, something which was ill-defined before.
+
+Finally, I will remove the `py3nvml.nvidia_smi` module in a future version, as
+I believe it was only ever meant as an example of how to use the nvml functions
+to query the gpus, and is now quite out of date. To get the same functionality,
+you can call `nvidia-smi -q -x` from python with subprocess.
+
+__ https://github.com/NVIDIA/nvidia-settings/blob/master/src/nvml.h
+
 Requires
 --------
 Python 3.5+.
@@ -108,6 +127,19 @@ value is True if no process was found running on gpu n. An example use is:
     free_gpus = py3nvml.get_free_gpus()
     if True not in free_gpus:
         print('No free gpus found')
+
+get_num_procs
+~~~~~~~~~~~~~
+This function is called by `get_free_gpus`. It simply returns a list of integers
+with the number of processes running on each gpu. E.g. if you had 1 process
+running on gpu 5 in an 8 gpu system, you would expect to get the following:
+
+.. code:: python
+    
+    import py3nvml
+    num_procs = py3nvml.get_num_procs()
+    print(num_proces)
+    >>> [0, 0, 0, 0, 0, 1, 0, 0]
 
 py3smi
 ~~~~~~
