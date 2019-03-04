@@ -32,9 +32,13 @@ def test_grabgpus2():
     assert res == 1
 
 def test_grabgpus3():
+    nvmlInit()
     res = grab_gpus(100)
     assert len(os.environ['CUDA_VISIBLE_DEVICES']) < len(','.join([str(x) for x in range(100)]))
-    assert res <= 8
+    assert res <= nvmlDeviceGetCount()
+
+    nvmlShutdown()
+
 
 def test_grabgpus4():
     res = grab_gpus(5, gpu_select=range(3,8))

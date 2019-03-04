@@ -81,9 +81,9 @@ Proceeding on cpu only..."""
 
     # Flag which gpus we can check
     if gpu_select is None:
-        gpu_check = [True] * 8
+        gpu_check = [True] * numDevices
     else:
-        gpu_check = [False] * 8
+        gpu_check = [False] * numDevices
         try:
             gpu_check[gpu_select] = True
         except TypeError:

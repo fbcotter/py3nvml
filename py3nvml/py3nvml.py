@@ -1116,9 +1116,16 @@ def _LoadNvmlLibrary():
             if (nvmlLib is None):
                 try:
                     if (sys.platform[:3] == "win"):
-                        # cdecl calling convention
-                        # load nvml.dll from %ProgramFiles%/NVIDIA Corporation/NVSMI/nvml.dll
-                        nvmlLib = CDLL(os.path.join(os.getenv("ProgramFiles", "C:/Program Files"), "NVIDIA Corporation/NVSMI/nvml.dll"))
+                        searchPaths = [
+                            os.path.join(os.getenv("ProgramFiles", r"C:\Program Files"), r"NVIDIA Corporation\NVSMI\nvml.dll"),
+                            os.path.join(os.getenv("WinDir", r"C:\Windows"), r"System32\nvml.dll"),
+                        ]
+                        nvmlPath = next((x for x in searchPaths if os.path.isfile(x)), None)
+                        if (nvmlPath == None):
+                            _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
+                        else:
+                            # cdecl calling convention
+                            nvmlLib = CDLL(nvmlPath)
                     else:
                         # assume linux
                         nvmlLib = CDLL("libnvidia-ml.so.1")
