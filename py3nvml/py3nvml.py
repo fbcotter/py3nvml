@@ -2244,6 +2244,37 @@ def nvmlDeviceGetCpuAffinity(handle, cpuSetSize):
     _nvmlCheckReturn(ret)
     return bytes_to_str(c_affinity)
 
+def nvmlDeviceGetCudaComputeCapability(handle):
+    r"""
+    /**
+     * Retrieves the CUDA compute capability of the device.
+     *
+     * For all products with an inforom.
+     *
+     * Returns the major and minor compute capability version numbers of the device. 
+     * The major and minor versions are equivalent to the CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR
+     * and CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR attributes that would be returned by CUDA's cuDeviceGetAttribute().
+     *
+     * @param device                              The identifier of the target device
+     * @param major                               Reference in which to return the major CUDA compute capability
+     * @param minor                               Reference in which to return the minor CUDA compute capability
+     *
+     * @return
+     *         - \ref NVML_SUCCESS                 if \a serial has been set
+     *         - \ref NVML_ERROR_UNINITIALIZED     if the library has not been successfully initialized
+     *         - \ref NVML_ERROR_INVALID_ARGUMENT  if \a device is invalid, or \a serial is NULL
+     *         - \ref NVML_ERROR_GPU_IS_LOST       if the target GPU has fallen off the bus or is otherwise inaccessible
+     *         - \ref NVML_ERROR_UNKNOWN           on any unexpected error
+     */
+    nvmlReturn_t DECLDIR nvmlDeviceGetCudaComputeCapability
+    """
+    major = c_uint(0)
+    minor = c_uint(0)
+    fn = _nvmlGetFunctionPointer("nvmlDeviceGetCudaComputeCapability")
+    ret = fn(handle, byref(major), byref(minor))
+    _nvmlCheckReturn(ret)
+    return major.value + 0.1 * minor.value
+
 def nvmlDeviceSetCpuAffinity(handle):
     r"""
     /**
