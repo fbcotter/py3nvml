@@ -60,4 +60,4 @@ def test_called_twice():
     grab_gpus(1)
     grab_gpus(1, env_set_ok=True)
     with pytest.raises(ValueError):
-        grab_gpus(1)
+        grab_gpus(1, env_set_ok=False)
