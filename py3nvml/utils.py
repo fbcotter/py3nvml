@@ -17,13 +17,13 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
     variable. Other programs can still come along and snatch your gpu. This
     function is more about preventing **you** from stealing someone else's GPU.
 
-    If more than 1 GPU is requested but the full amount are available, then it
+    If more than 1 GPU is requested but not all were available, then it
     will set the CUDA_VISIBLE_DEVICES variable to see all the available GPUs.
     A warning is generated in this case.
 
     If one or more GPUs were requested and none were available, a Warning
-    will be raised. Before raising it, the CUDA_VISIBLE_DEVICES will be set to a
-    blank string. This means the calling function can ignore this warning and
+    will be raised. Before raising it, the CUDA_VISIBLE_DEVICES will be set to
+    a blank string. This means the calling function can ignore this warning and
     proceed if it chooses to only use the CPU, and it should still be protected
     against putting processes on a busy GPU.
 
@@ -33,10 +33,11 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
     Parameters
     ----------
     num_gpus : int
-        How many gpus your job needs (optional)
+        How many gpus your job needs (optional). Can set to -1 to take all
+        remaining available GPUs.
     gpu_select : iterable
         A single int or an iterable of ints indicating gpu numbers to
-        search through.  If left blank, will search through all gpus.
+        search through. If None, will search through all gpus.
     gpu_fraction : float
         The fractional of a gpu memory that must be free for the script to see
         the gpu as free. Defaults to 1. Useful if someone has grabbed a tiny
@@ -55,6 +56,8 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
     RuntimeWarning
         If couldn't connect with NVIDIA drivers.
         If 1 or more gpus were requested and none were available.
+        Will NOT raise a RuntimeWarning for mismatch in GPU availability if
+        `num_gpus` is -1.
     ValueError
         If the gpu_select option was not understood (can fix by leaving this
         field blank, providing an int or an iterable of ints).
@@ -70,14 +73,19 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
     try:
         py3nvml.nvmlInit()
     except:
-        str_ = """ Couldn't connect to nvml drivers. Check they are installed correctly.
-Proceeding on cpu only..."""
+        str_ = "Couldn't connect to nvml drivers. Check they are installed " \
+            "correctly.\nProceeding on cpu only..."
         warnings.warn(str_, RuntimeWarning)
         logger.warn(str_)
         return 0
 
     numDevices = py3nvml.nvmlDeviceGetCount()
     gpu_free = [False]*numDevices
+
+    warn_about_fewer_gpus = True
+    if num_gpus == -1:
+        num_gpus = numDevices
+        warn_about_fewer_gpus = False
 
     # Flag which gpus we can check
     if gpu_select is None:
@@ -91,8 +99,8 @@ Proceeding on cpu only..."""
                 for i in gpu_select:
                     gpu_check[i] = True
             except:
-                raise ValueError('''Please provide an int or an iterable of ints
-                    for gpu_select''')
+                raise ValueError('Please set gpu_select to None, an int or an'
+                                 'iterable of ints.')
 
     # Print out GPU device info. Useful for debugging.
     for i in range(numDevices):
@@ -112,7 +120,7 @@ Proceeding on cpu only..."""
     if max_procs >= 0:
         procs_ok = get_free_gpus(max_procs=max_procs)
     else:
-        procs_ok = [True,] * numDevices
+        procs_ok = [True, ] * numDevices
 
     # Now check if any devices are suitable
     for i in range(numDevices):
@@ -145,9 +153,9 @@ Proceeding on cpu only..."""
             logger.info('Using {}'.format(use_gpus))
             os.environ['CUDA_VISIBLE_DEVICES'] = use_gpus
             return num_gpus
-        else:
+        elif warn_about_fewer_gpus:
             # use everything we can.
-            s = "Only {} GPUs found but {}".format(sum(gpu_free), num_gpus) + \
+            s = "Only {} GPUs found but {} ".format(sum(gpu_free), num_gpus) + \
                 "requested. Allocating these and continuing."
             warnings.warn(s, RuntimeWarning)
             logger.warn(s)

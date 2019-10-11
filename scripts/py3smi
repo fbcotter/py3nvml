@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-from py3nvml.py3nvml import *
+from py3nvml.py3nvml import *  
 from datetime import datetime
 import re
 import os
@@ -12,20 +12,20 @@ from subprocess import Popen, PIPE
 import argparse
 from time import sleep
 import sys
+from contextlib import contextmanager
 
 parser = argparse.ArgumentParser(description='Print GPU stats')
-parser.add_argument('-l', '--loop', action='store', type=int,
-                    default=0, help='Loop period')
-parser.add_argument('-f', '--full', action='store_true',
-                    help='Print extended version')
-parser.add_argument('-w', '--width', type=int, default=77,
-                    help='Print width')
+parser.add_argument('-l', '--loop', action='store', type=int, default=0, help='Loop period')
+parser.add_argument('-f', '--full', action='store_true', help='Print extended version')
+parser.add_argument('-w', '--width', type=int, default=77, help='Print width')
+parser.add_argument('--left', action='store_true', help='Prints left part of process name')
 
 COL1_WIDTH = 33
 COL2_WIDTH = 21
 COL3_WIDTH = 21
 WIDTH = 77
 LONG_FORMAT = False
+LEN_PROCESS_LESS_NAME = 51
 
 gpu_format_col1 = '| {:>3} {:3} {:>5} {:>4} {:>11}|'
 gpu_format_col2 = ' {:>19} |'
@@ -76,6 +76,7 @@ def print_proc_header():
     print('+' + '=' * args.width + '+')
     return 6
 
+
 def enabled_str(x):
     if x == 'Enabled':
         return 'On'
@@ -122,7 +123,6 @@ def print_gpu_info(index, long_format=False):
             print(gpu_format_col2.format(''), end='')
             print(gpu_format_col3.format('', ''))
             return 1
-
 
     min_number = try_get_info(nvmlDeviceGetMinorNumber, h)
     prod_name = try_get_info(nvmlDeviceGetName, h)
@@ -199,10 +199,13 @@ def print_gpu_info(index, long_format=False):
     return n
 
 
-def cut_proc_name(name, maxlen):
+def cut_proc_name(name, maxlen, left=False):
     if len(name) > maxlen:
         #  return '...' + name[-maxlen+3:]
-        return name[:maxlen-3] + '...'
+        if left:
+            return name[:maxlen-2] + '..'
+        else:
+            return '..' + name[-maxlen+2:]
     else:
         return name
 
@@ -240,7 +243,7 @@ def get_uptime(pid):
     return time
 
 
-def main(full=False):
+def main(full=False, left=False):
     num_lines = 0
     driver_version = nvmlSystemGetDriverVersion()
     header_lines = print_header(driver_version, full)
@@ -276,7 +279,7 @@ def main(full=False):
             uptime = get_uptime(p.pid)
             print(proc_format.format(
                 min_number, uname, p.pid, uptime,
-                cut_proc_name(procname, args.width-50),
+                cut_proc_name(procname, args.width-LEN_PROCESS_LESS_NAME, left),
                 p.usedGpuMemory >> 20, 'MiB'))
             proc_lines += 1
     print('+' + '-' * args.width + '+')
@@ -290,16 +293,16 @@ def main(full=False):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    proc_format = '| {:>3}  {:>11}  {:>5}  {:>11}  {: <' + str(args.width-50) + '}  {:>5}{:3<} |'
+    proc_format = '| {:>3}  {:>11}  {:>7}  {:>10}  {: <' + str(args.width-LEN_PROCESS_LESS_NAME) + '}  {:>5}{:3<} |'
     nvmlInit()
-    print_lines = main(args.full)
+    print_lines = main(args.full, args.left)
 
     if args.loop > 0:
         try:
             while True:
                 sleep(args.loop)
                 sys.stdout.write("\033[F" * print_lines)
-                print_lines_new = main(args.full)
+                print_lines_new = main(args.full, args.left)
                 if print_lines_new < print_lines:
                     sys.stdout.write((' '*(args.width+2)+'\n')*(print_lines - print_lines_new))
                     sys.stdout.write("\033[F" * (print_lines - print_lines_new))
@@ -307,5 +310,3 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             pass
     nvmlShutdown()
-
-
