@@ -8,7 +8,8 @@ import warnings
 from py3nvml import py3nvml
 
 
-def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
+def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
+              env_set_ok=True):
     """
     Checks for gpu availability and sets CUDA_VISIBLE_DEVICES as such.
 
@@ -45,6 +46,8 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
     max_procs : int
         Maximum number of processes allowed on a GPU (as well as memory
         restriction).
+    env_set_ok : bool
+        If true, will complain if CUDA_VISIBLE_DEVICES is already set.
 
     Returns
     -------
@@ -62,6 +65,11 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1):
         If the gpu_select option was not understood (can fix by leaving this
         field blank, providing an int or an iterable of ints).
     """
+    if not env_set_ok and 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
+        raise ValueError('Trying to set CUDA_VISIBLE_DEVICES but it has been '
+                         'set already. Specify env_set_ok=True to avoid this '
+                         'error.')
+
     # Set the visible devices to blank.
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
