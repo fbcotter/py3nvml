@@ -9,7 +9,7 @@ from py3nvml import py3nvml
 
 
 def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
-              env_set_ok=True):
+              env_set_ok=False):
     """
     Checks for gpu availability and sets CUDA_VISIBLE_DEVICES as such.
 
@@ -47,7 +47,7 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
         Maximum number of processes allowed on a GPU (as well as memory
         restriction).
     env_set_ok : bool
-        If true, will complain if CUDA_VISIBLE_DEVICES is already set.
+        If false, will complain if CUDA_VISIBLE_DEVICES is already set.
 
     Returns
     -------
