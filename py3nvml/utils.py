@@ -84,7 +84,7 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
         str_ = "Couldn't connect to nvml drivers. Check they are installed " \
             "correctly.\nProceeding on cpu only..."
         warnings.warn(str_, RuntimeWarning)
-        logger.warn(str_)
+        logger.warning(str_)
         return 0
 
     numDevices = py3nvml.nvmlDeviceGetCount()
@@ -149,7 +149,7 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
     # Now check whether we can create the session
     if sum(gpu_free) == 0:
         warnings.warn("Could not find enough GPUs for your job", RuntimeWarning)
-        logger.warn(str_)
+        logger.warning(str_)
         return 0
     else:
         if sum(gpu_free) >= num_gpus:
@@ -166,7 +166,7 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
             s = "Only {} GPUs found but {} ".format(sum(gpu_free), num_gpus) + \
                 "requested. Allocating these and continuing."
             warnings.warn(s, RuntimeWarning)
-            logger.warn(s)
+            logger.warning(s)
             available_gpus = [i for i, x in enumerate(gpu_free) if x]
             use_gpus = ','.join(list(str(s) for s in available_gpus))
             logger.debug('{} Gpus found free'.format(sum(gpu_free)))
@@ -212,7 +212,7 @@ def get_free_gpus(max_procs=0):
     except:
         str_ = """Couldn't connect to nvml drivers. Check they are installed correctly."""
         warnings.warn(str_, RuntimeWarning)
-        logger.warn(str_)
+        logger.warning(str_)
         return []
 
     num_gpus = py3nvml.nvmlDeviceGetCount()
@@ -256,7 +256,7 @@ def get_num_procs():
     except:
         str_ = """Couldn't connect to nvml drivers. Check they are installed correctly."""
         warnings.warn(str_, RuntimeWarning)
-        logger.warn(str_)
+        logger.warning(str_)
         return []
 
     num_gpus = py3nvml.nvmlDeviceGetCount()
