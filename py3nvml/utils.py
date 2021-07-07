@@ -9,7 +9,7 @@ from py3nvml import py3nvml
 
 
 def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
-              env_set_ok=False):
+              env_set_ok=False, gpu_min_memory = None):
     """
     Checks for gpu availability and sets CUDA_VISIBLE_DEVICES as such.
 
@@ -48,6 +48,8 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
         restriction).
     env_set_ok : bool
         If false, will complain if CUDA_VISIBLE_DEVICES is already set.
+    gpu_min_memory: int
+        The minimal allowed graphics card memory amount in MiB.
 
     Returns
     -------
@@ -137,6 +139,13 @@ def grab_gpus(num_gpus=1, gpu_select=None, gpu_fraction=0.95, max_procs=-1,
 
             handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
             info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+            # Sometimes we want to avoid using weaker GPUs overall
+            if gpu_min_memory:
+                if (info.total/(1024*1024) < gpu_min_memory):
+                    logger.info('GPU {} does not have enough RAM. Skipping.'.format(i))
+                    continue
+
 
             # Sometimes GPU has a few MB used when it is actually free
             if (info.free+10)/info.total >= gpu_fraction:
