@@ -106,6 +106,15 @@ You can adjust the memory threshold for determining if a GPU is free/used with t
     py3nvml.grab_gpus(num_gpus=2, gpu_fraction=0.8)
     sess = tf.Session() 
 
+You can select the graphics card based on its capacity. Specify minimal amount of graphics card memory in MiB in 
+order to exclude the weaker graphics cards.
+
+.. code:: python
+    
+    # Will allocate a GPU only if it has more than 4000 MiB of memory
+    py3nvml.grab_gpus(num_gpus=2, gpu_min_memory=4000)
+    sess = tf.Session() 
+
 This function has no return codes but may raise some warnings/exceptions:
 
 - If the method could not connect to any NVIDIA gpus, it will raise
