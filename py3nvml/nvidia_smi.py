@@ -814,7 +814,7 @@ def XmlDeviceQuery():
                     strResult += '      <process_name>' + name + '</process_name>\n'
 
                     if (p.usedGpuMemory == None):
-                        mem = 'N\A'
+                        mem = 'N/A'
                     else:
                         mem = '%d MiB' % (p.usedGpuMemory / 1024 / 1024)
                     strResult += '      <used_memory>' + mem + '</used_memory>\n'
@@ -835,7 +835,7 @@ def XmlDeviceQuery():
                         gpuUtilization = "%d %%" % stats.gpuUtilization
                         memoryUtilization = "%d %%" % stats.memoryUtilization
                         if (stats.maxMemoryUsage == None):
-                            maxMemoryUsage = 'N\A'
+                            maxMemoryUsage = 'N/A'
                         else:
                             maxMemoryUsage = '%d MiB' % (stats.maxMemoryUsage / 1024 / 1024)
                         time = "%d ms" % stats.time
