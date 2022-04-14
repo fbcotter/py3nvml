@@ -32,7 +32,7 @@ gpu_format_col3 = ' {:>8} {:>10} |'
 gpu_longformat_col11 = '| {:>3} {:<22} {:>3}  |'
 gpu_longformat_col12 = ' {:>15} {:>3} |'
 gpu_longformat_col13 = ' {:>19} |'
-gpu_longformat_col21 = '| {:>3} {:>4}   {:>3}     {:>11}|'
+gpu_longformat_col21 = '| {:>3} {:>4}   {:>3}    {:>11}|'
 gpu_longformat_col22 = ' {:>19} |'
 gpu_longformat_col23 = ' {:>8} {:>10} |'
 
